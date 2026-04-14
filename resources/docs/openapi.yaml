@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: Team 4 Booking Vaksin Faskes API
+  description: >-
+    Base OpenAPI specification for vaccination and healthcare service booking.
+    This file is intended as a starter for future feature development and testing.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Local Docker
+
+tags:
+  - name: System
+    description: Base system endpoints
+  - name: Auth
+    description: Authentication placeholder endpoints
+
+paths:
+  /up:
+    get:
+      tags:
+        - System
+      summary: Health check endpoint
+      description: Laravel built-in health endpoint.
+      responses:
+        '200':
+          description: Service is healthy
+
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login placeholder
+      description: Placeholder for upcoming authentication feature.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: secret123
+      responses:
+        '200':
+          description: Login successful (planned)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Request processed.
+        data:
+          nullable: true
+          description: Placeholder response payload.
