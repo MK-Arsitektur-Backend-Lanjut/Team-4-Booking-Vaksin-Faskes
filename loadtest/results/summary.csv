@@ -1,0 +1,8 @@
+﻿"metric","type","contains","count","rate","avg","min","med","p90","p95","max"
+"data_received",,,"0",,,,,,,
+"data_sent",,,"0",,,,,,,
+"http_req_duration",,,"0",,,,,,,
+"http_req_failed",,,"0",,,,,,,
+"list_success_rate",,,"0",,,,,,,
+"vus",,,"0",,,,,,,
+"vus_max",,,"0",,,,,,,

@@ -2,8 +2,8 @@ openapi: 3.0.3
 info:
   title: Team 4 Booking Vaksin Faskes API
   description: >-
-    Base OpenAPI specification for vaccination and healthcare service booking.
-    This file is intended as a starter for future feature development and testing.
+    OpenAPI specification for vaccination and healthcare service booking.
+    Includes Patient Registration module endpoints.
   version: 1.0.0
 
 servers:
@@ -13,8 +13,8 @@ servers:
 tags:
   - name: System
     description: Base system endpoints
-  - name: Auth
-    description: Authentication placeholder endpoints
+  - name: Patient Registration
+    description: Patient registration, identity verification, and history management
 
 paths:
   /up:
@@ -27,12 +27,32 @@ paths:
         '200':
           description: Service is healthy
 
-  /api/v1/auth/login:
+  /api/v1/patients:
+    get:
+      tags:
+        - Patient Registration
+      summary: List patients
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search by NIK or patient name
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 15
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated patient list
+
     post:
       tags:
-        - Auth
-      summary: Login placeholder
-      description: Placeholder for upcoming authentication feature.
+        - Patient Registration
+      summary: Register a new patient
       requestBody:
         required: true
         content:
@@ -40,30 +60,295 @@ paths:
             schema:
               type: object
               required:
-                - email
-                - password
+                - nik
+                - full_name
+                - birth_date
+                - gender
               properties:
-                email:
+                nik:
                   type: string
-                  format: email
-                  example: user@example.com
-                password:
+                  example: '3201010101010001'
+                full_name:
                   type: string
-                  format: password
-                  example: secret123
+                  example: Budi Santoso
+                birth_date:
+                  type: string
+                  format: date
+                gender:
+                  type: string
+                  enum: [male, female]
+                phone_number:
+                  type: string
+                address:
+                  type: string
+      responses:
+        '201':
+          description: Patient registered
+
+  /api/v1/patients/verify-identity:
+    post:
+      tags:
+        - Patient Registration
+      summary: Verify patient identity with NIK and birth date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nik, birth_date]
+              properties:
+                nik:
+                  type: string
+                birth_date:
+                  type: string
+                  format: date
       responses:
         '200':
-          description: Login successful (planned)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-        '401':
-          description: Invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+          description: Identity verified
+        '422':
+          description: Identity mismatch
+
+  /api/v1/patients/{patientId}/health-histories:
+    get:
+      tags:
+        - Patient Registration
+      summary: Get health histories by patient
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          description: External patient ID (patients.patient_id)
+          schema:
+            type: string
+            example: PAT-20260414-000001
+      responses:
+        '200':
+          description: Health history list
+    post:
+      tags:
+        - Patient Registration
+      summary: Add health history to patient
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          description: External patient ID (patients.patient_id)
+          schema:
+            type: string
+            example: PAT-20260414-000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [condition_name]
+              properties:
+                condition_name:
+                  type: string
+                diagnosed_at:
+                  type: string
+                  format: date
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Health history created
+
+  /api/v1/patients/{patientId}/health-histories/{historyId}:
+    put:
+      tags:
+        - Patient Registration
+      summary: Update health history by external id
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          description: External patient ID (patients.patient_id)
+          schema:
+            type: string
+            example: PAT-20260414-000001
+        - in: path
+          name: historyId
+          required: true
+          description: External health history ID (health_histories.health_history_id)
+          schema:
+            type: string
+            example: HLT-20260414-000123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                condition_name:
+                  type: string
+                diagnosed_at:
+                  type: string
+                  format: date
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Health history updated
+    delete:
+      tags:
+        - Patient Registration
+      summary: Delete health history by external id
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          description: External patient ID (patients.patient_id)
+          schema:
+            type: string
+            example: PAT-20260414-000001
+        - in: path
+          name: historyId
+          required: true
+          description: External health history ID (health_histories.health_history_id)
+          schema:
+            type: string
+            example: HLT-20260414-000123
+      responses:
+        '200':
+          description: Health history deleted
+
+  /api/v1/patients/{patientId}/vaccination-histories:
+    get:
+      tags:
+        - Patient Registration
+      summary: Get vaccination histories by patient
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          description: External patient ID (patients.patient_id)
+          schema:
+            type: string
+            example: PAT-20260414-000001
+      responses:
+        '200':
+          description: Vaccination history list
+    post:
+      tags:
+        - Patient Registration
+      summary: Add vaccination history to patient
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          description: External patient ID (patients.patient_id)
+          schema:
+            type: string
+            example: PAT-20260414-000001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vaccine_name, dose_number, vaccinated_at]
+              properties:
+                vaccine_name:
+                  type: string
+                dose_number:
+                  type: integer
+                vaccinated_at:
+                  type: string
+                  format: date-time
+                provider_name:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Vaccination history created
+
+  /api/v1/patients/{patientId}/vaccination-histories/{historyId}:
+    put:
+      tags:
+        - Patient Registration
+      summary: Update vaccination history by external id
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          description: External patient ID (patients.patient_id)
+          schema:
+            type: string
+            example: PAT-20260414-000001
+        - in: path
+          name: historyId
+          required: true
+          description: External vaccination history ID (vaccination_histories.vaccination_history_id)
+          schema:
+            type: string
+            example: VAC-20260414-000321
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                vaccine_name:
+                  type: string
+                dose_number:
+                  type: integer
+                vaccinated_at:
+                  type: string
+                  format: date-time
+                provider_name:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Vaccination history updated
+    delete:
+      tags:
+        - Patient Registration
+      summary: Delete vaccination history by external id
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          description: External patient ID (patients.patient_id)
+          schema:
+            type: string
+            example: PAT-20260414-000001
+        - in: path
+          name: historyId
+          required: true
+          description: External vaccination history ID (vaccination_histories.vaccination_history_id)
+          schema:
+            type: string
+            example: VAC-20260414-000321
+      responses:
+        '200':
+          description: Vaccination history deleted
+
+  /api/v1/patients/{patientId}:
+    get:
+      tags:
+        - Patient Registration
+      summary: Get patient detail
+      parameters:
+        - in: path
+          name: patientId
+          required: true
+          description: External patient ID (patients.patient_id)
+          schema:
+            type: string
+            example: PAT-20260414-000001
+      responses:
+        '200':
+          description: Patient detail
+        '404':
+          description: Not found
 
 components:
   securitySchemes:
