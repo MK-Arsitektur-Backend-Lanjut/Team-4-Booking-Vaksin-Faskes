@@ -15,11 +15,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Default user
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+        ]);
+
+        // Module 3: Queue & Appointment seeders
+        $this->call([
+            HealthCenterSeeder::class,  // 50 health centers
+            VaccineSeeder::class,       // 6 vaccine types
+            ScheduleSeeder::class,      // 200 schedules
+            PatientSeeder::class,       // 2,000 patients
+            BookingSeeder::class,       // 10,000 bookings
         ]);
     }
 }
