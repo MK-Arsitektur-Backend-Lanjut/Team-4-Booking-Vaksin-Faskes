@@ -3,6 +3,14 @@
 namespace App\Providers;
 
 use App\Repositories\Base\ModelRepository;
+use App\Repositories\Contracts\HealthCenterRepositoryInterface;
+use App\Repositories\Contracts\VaccineRepositoryInterface;
+use App\Repositories\Contracts\VaccineStockRepositoryInterface;
+use App\Repositories\Contracts\VaccineScheduleRepositoryInterface;
+use App\Repositories\HealthCenterRepository;
+use App\Repositories\VaccineRepository;
+use App\Repositories\VaccineStockRepository;
+use App\Repositories\VaccineScheduleRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +32,12 @@ class AppServiceProvider extends ServiceProvider
 
             return new ModelRepository(new $modelClass());
         });
+
+        // Repository Bindings for Module 1
+        $this->app->bind(HealthCenterRepositoryInterface::class, HealthCenterRepository::class);
+        $this->app->bind(VaccineRepositoryInterface::class, VaccineRepository::class);
+        $this->app->bind(VaccineStockRepositoryInterface::class, VaccineStockRepository::class);
+        $this->app->bind(VaccineScheduleRepositoryInterface::class, VaccineScheduleRepository::class);
     }
 
     /**
