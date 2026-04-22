@@ -8,13 +8,13 @@ use Illuminate\Database\Seeder;
 class PatientSeeder extends Seeder
 {
     /**
-     * Seed 2,000 patients.
+     * Seed 10,000 patients.
      */
     public function run(): void
     {
         // Create in chunks to avoid memory issues
         for ($i = 0; $i < 20; $i++) {
-            Patient::factory(100)->create();
+            Patient::factory(500)->create();
         }
     }
 }

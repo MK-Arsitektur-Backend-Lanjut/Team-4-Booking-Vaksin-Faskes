@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\BookingRepositoryInterface;
-use App\Services\ScheduleService;
+use App\Repositories\ScheduleRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
 {
     public function __construct(
-        protected ScheduleService $scheduleService,
+        protected ScheduleRepositoryInterface $scheduleRepository,
         protected BookingRepositoryInterface $bookingRepository,
     ) {}
 
@@ -27,10 +27,10 @@ class ScheduleController extends Controller
             'health_center_id' => ['nullable', 'integer', 'exists:health_centers,id'],
         ]);
 
-        $schedules = $this->scheduleService->getAvailableSchedules(
-            $request->input('date'),
-            $request->input('health_center_id') ? (int) $request->input('health_center_id') : null,
-        );
+        $date = $request->input('date');
+        $healthCenterId = $request->input('health_center_id') ? (int) $request->input('health_center_id') : null;
+
+        $schedules = $this->scheduleRepository->findAvailable($date, $healthCenterId);
 
         return response()->json([
             'success' => true,
@@ -46,7 +46,14 @@ class ScheduleController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $schedule = $this->scheduleService->getScheduleDetail($id);
+        $schedule = $this->scheduleRepository->findWithRelations($id);
+
+        if (! $schedule) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Schedule not found.',
+            ], 404);
+        }
 
         return response()->json([
             'success' => true,

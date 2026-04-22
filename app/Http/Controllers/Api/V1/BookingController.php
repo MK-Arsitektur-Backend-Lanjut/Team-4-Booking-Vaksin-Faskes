@@ -5,15 +5,15 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CancelBookingRequest;
 use App\Http\Requests\StoreBookingRequest;
-use App\Services\BookingService;
+use App\Repositories\BookingRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 
 class BookingController extends Controller
 {
     public function __construct(
-        protected BookingService $bookingService,
+        protected BookingRepositoryInterface $bookingRepository,
     ) {}
 
     /**
@@ -26,9 +26,8 @@ class BookingController extends Controller
     {
         // If patient_id is provided, return all bookings for that patient
         if ($request->has('patient_id')) {
-            $bookings = $this->bookingService->getBookingsByPatient(
-                (int) $request->input('patient_id')
-            );
+            $patientId = (int) $request->input('patient_id');
+            $bookings = $this->bookingRepository->findByPatient($patientId);
 
             return response()->json([
                 'success' => true,
@@ -44,11 +43,11 @@ class BookingController extends Controller
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
-        $bookings = $this->bookingService->getBookingsBySchedule(
-            (int) $request->input('schedule_id'),
-            $request->input('status'),
-            (int) $request->input('per_page', 15),
-        );
+        $scheduleId = (int) $request->input('schedule_id');
+        $status = $request->input('status');
+        $perPage = (int) $request->input('per_page', 15);
+
+        $bookings = $this->bookingRepository->findBySchedule($scheduleId, $status, $perPage);
 
         return response()->json([
             'success' => true,
@@ -64,24 +63,47 @@ class BookingController extends Controller
      */
     public function store(StoreBookingRequest $request): JsonResponse
     {
-        try {
-            $booking = $this->bookingService->createBooking(
-                $request->validated('schedule_id'),
-                $request->validated('patient_id'),
-            );
+        $scheduleId = $request->validated('schedule_id');
+        $patientId = $request->validated('patient_id');
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Booking created successfully.',
-                'data' => $booking,
-            ], 201);
-        } catch (ValidationException $e) {
+        // Check for duplicate booking
+        if ($this->bookingRepository->checkDuplicateBooking($scheduleId, $patientId)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Booking failed.',
-                'errors' => $e->errors(),
+                'errors' => ['patient_id' => ['Patient already has an active booking for this schedule.']],
             ], 422);
         }
+
+        // Check quota availability
+        $quota = $this->bookingRepository->getQuotaUsage($scheduleId);
+        if ($quota['available'] <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking failed.',
+                'errors' => ['schedule_id' => ['No available quota for this schedule. All slots are fully booked.']],
+            ], 422);
+        }
+
+        // Get the next queue number
+        $queueNumber = $this->bookingRepository->getNextQueueNumber($scheduleId);
+
+        // Create the booking
+        $booking = $this->bookingRepository->create([
+            'schedule_id' => $scheduleId,
+            'patient_id' => $patientId,
+            'queue_number' => $queueNumber,
+            'status' => 'pending',
+            'booked_at' => Carbon::now(),
+        ]);
+
+        $booking->load(['schedule.healthCenter', 'schedule.vaccine', 'patient']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking created successfully.',
+            'data' => $booking,
+        ], 201);
     }
 
     /**
@@ -91,7 +113,8 @@ class BookingController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $booking = $this->bookingService->getBookingDetail($id);
+        $booking = $this->bookingRepository->findOrFail($id);
+        $booking->load(['schedule.healthCenter', 'schedule.vaccine', 'patient']);
 
         return response()->json([
             'success' => true,
@@ -107,21 +130,28 @@ class BookingController extends Controller
      */
     public function checkIn(int $id): JsonResponse
     {
-        try {
-            $booking = $this->bookingService->checkIn($id);
+        $booking = $this->bookingRepository->findOrFail($id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Patient checked in successfully.',
-                'data' => $booking,
-            ]);
-        } catch (ValidationException $e) {
+        if ($booking->status !== 'pending' && $booking->status !== 'confirmed') {
             return response()->json([
                 'success' => false,
                 'message' => 'Check-in failed.',
-                'errors' => $e->errors(),
+                'errors' => ['status' => ["Cannot check in a booking with status '{$booking->status}'. Must be 'pending' or 'confirmed'."]],
             ], 422);
         }
+
+        $this->bookingRepository->updateStatus($id, 'checked_in', [
+            'checked_in_at' => Carbon::now(),
+        ]);
+
+        $updatedBooking = $this->bookingRepository->findOrFail($id);
+        $updatedBooking->load(['schedule.healthCenter', 'schedule.vaccine', 'patient']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Patient checked in successfully.',
+            'data' => $updatedBooking,
+        ]);
     }
 
     /**
@@ -131,21 +161,28 @@ class BookingController extends Controller
      */
     public function complete(int $id): JsonResponse
     {
-        try {
-            $booking = $this->bookingService->completeBooking($id);
+        $booking = $this->bookingRepository->findOrFail($id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Booking completed successfully.',
-                'data' => $booking,
-            ]);
-        } catch (ValidationException $e) {
+        if ($booking->status !== 'checked_in') {
             return response()->json([
                 'success' => false,
                 'message' => 'Completion failed.',
-                'errors' => $e->errors(),
+                'errors' => ['status' => ["Cannot complete a booking with status '{$booking->status}'. Must be 'checked_in'."]],
             ], 422);
         }
+
+        $this->bookingRepository->updateStatus($id, 'completed', [
+            'completed_at' => Carbon::now(),
+        ]);
+
+        $updatedBooking = $this->bookingRepository->findOrFail($id);
+        $updatedBooking->load(['schedule.healthCenter', 'schedule.vaccine', 'patient']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking completed successfully.',
+            'data' => $updatedBooking,
+        ]);
     }
 
     /**
@@ -155,23 +192,30 @@ class BookingController extends Controller
      */
     public function cancel(CancelBookingRequest $request, int $id): JsonResponse
     {
-        try {
-            $booking = $this->bookingService->cancelBooking(
-                $id,
-                $request->validated('cancellation_reason'),
-            );
+        $booking = $this->bookingRepository->findOrFail($id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Booking cancelled successfully.',
-                'data' => $booking,
-            ]);
-        } catch (ValidationException $e) {
+        if (in_array($booking->status, ['completed', 'cancelled'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cancellation failed.',
-                'errors' => $e->errors(),
+                'errors' => ['status' => ["Cannot cancel a booking that is already {$booking->status}."]],
             ], 422);
         }
+
+        $reason = $request->validated('cancellation_reason');
+
+        $this->bookingRepository->updateStatus($id, 'cancelled', [
+            'cancelled_at' => Carbon::now(),
+            'cancellation_reason' => $reason,
+        ]);
+
+        $updatedBooking = $this->bookingRepository->findOrFail($id);
+        $updatedBooking->load(['schedule.healthCenter', 'schedule.vaccine', 'patient']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking cancelled successfully.',
+            'data' => $updatedBooking,
+        ]);
     }
 }

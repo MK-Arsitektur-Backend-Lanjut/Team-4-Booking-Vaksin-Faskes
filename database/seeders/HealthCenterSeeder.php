@@ -8,10 +8,13 @@ use Illuminate\Database\Seeder;
 class HealthCenterSeeder extends Seeder
 {
     /**
-     * Seed 50 health centers.
+     * Seed 10,000 health centers.
      */
     public function run(): void
     {
-        HealthCenter::factory(50)->create();
+        // Create in chunks to avoid memory issues
+        for ($i = 0; $i < 20; $i++) {
+            HealthCenter::factory(500)->create();
+        }
     }
 }
