@@ -9,6 +9,7 @@ use App\Repositories\BookingRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
@@ -66,44 +67,62 @@ class BookingController extends Controller
         $scheduleId = $request->validated('schedule_id');
         $patientId = $request->validated('patient_id');
 
-        // Check for duplicate booking
-        if ($this->bookingRepository->checkDuplicateBooking($scheduleId, $patientId)) {
+        try {
+            $booking = DB::transaction(function () use ($scheduleId, $patientId) {
+                // Check for duplicate booking
+                if ($this->bookingRepository->checkDuplicateBooking($scheduleId, $patientId)) {
+                    throw new \Exception('DUPLICATE_BOOKING');
+                }
+
+                // Check quota availability
+                // We lock the schedule record to prevent concurrent bookings from exceeding quota
+                DB::table('schedules')->where('id', $scheduleId)->lockForUpdate()->first();
+
+                $quota = $this->bookingRepository->getQuotaUsage($scheduleId);
+                if ($quota['available'] <= 0) {
+                    throw new \Exception('NO_QUOTA');
+                }
+
+                // Get the next queue number
+                $queueNumber = $this->bookingRepository->getNextQueueNumber($scheduleId);
+
+                // Create the booking
+                return $this->bookingRepository->create([
+                    'schedule_id' => $scheduleId,
+                    'patient_id' => $patientId,
+                    'queue_number' => $queueNumber,
+                    'status' => 'pending',
+                    'booked_at' => Carbon::now(),
+                ]);
+            });
+
+            $booking->load(['schedule.healthCenter', 'schedule.vaccine', 'patient']);
+
             return response()->json([
-                'success' => false,
-                'message' => 'Booking failed.',
-                'errors' => ['patient_id' => ['Patient already has an active booking for this schedule.']],
-            ], 422);
+                'success' => true,
+                'message' => 'Booking created successfully.',
+                'data' => $booking,
+            ], 201);
+
+        } catch (\Exception $e) {
+            if ($e->getMessage() === 'DUPLICATE_BOOKING') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Booking failed.',
+                    'errors' => ['patient_id' => ['Patient already has an active booking for this schedule.']],
+                ], 422);
+            }
+
+            if ($e->getMessage() === 'NO_QUOTA') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Booking failed.',
+                    'errors' => ['schedule_id' => ['No available quota for this schedule. All slots are fully booked.']],
+                ], 422);
+            }
+
+            throw $e;
         }
-
-        // Check quota availability
-        $quota = $this->bookingRepository->getQuotaUsage($scheduleId);
-        if ($quota['available'] <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Booking failed.',
-                'errors' => ['schedule_id' => ['No available quota for this schedule. All slots are fully booked.']],
-            ], 422);
-        }
-
-        // Get the next queue number
-        $queueNumber = $this->bookingRepository->getNextQueueNumber($scheduleId);
-
-        // Create the booking
-        $booking = $this->bookingRepository->create([
-            'schedule_id' => $scheduleId,
-            'patient_id' => $patientId,
-            'queue_number' => $queueNumber,
-            'status' => 'pending',
-            'booked_at' => Carbon::now(),
-        ]);
-
-        $booking->load(['schedule.healthCenter', 'schedule.vaccine', 'patient']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Booking created successfully.',
-            'data' => $booking,
-        ], 201);
     }
 
     /**
