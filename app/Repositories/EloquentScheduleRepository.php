@@ -47,11 +47,10 @@ class EloquentScheduleRepository extends EloquentBaseRepository implements Sched
         }
 
         return $query
+            ->havingRaw('booked_count < quota')
             ->orderBy('date')
             ->orderBy('start_time')
-            ->get()
-            ->filter(fn (Schedule $schedule) => $schedule->booked_count < $schedule->quota)
-            ->values();
+            ->get();
     }
 
     /**
