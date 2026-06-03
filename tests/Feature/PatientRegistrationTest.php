@@ -114,7 +114,7 @@ class PatientRegistrationTest extends TestCase
         $this->deleteJson("/api/v1/patients/{$patientExternalId}/vaccination-histories/{$vaccinationId}")
             ->assertOk();
 
-        $this->assertDatabaseMissing('health_histories', ['id' => $healthId]);
-        $this->assertDatabaseMissing('vaccination_histories', ['id' => $vaccinationId]);
+        $this->assertDatabaseMissing('health_histories', ['health_history_id' => $healthId]);
+        $this->assertDatabaseMissing('vaccination_histories', ['vaccination_history_id' => $vaccinationId]);
     }
 }
