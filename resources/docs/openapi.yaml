@@ -2,8 +2,9 @@ openapi: 3.0.3
 info:
   title: Team 4 Booking Vaksin Faskes API
   description: >-
-    Base OpenAPI specification for vaccination and healthcare service booking.
-    This file is intended as a starter for future feature development and testing.
+    API for vaccination and healthcare service booking system.
+    Module 3: Queue & Appointment — booking queue numbers, attendance status,
+    and real-time quota reporting.
   version: 1.0.0
 
 servers:
@@ -13,6 +14,10 @@ servers:
 tags:
   - name: System
     description: Base system endpoints
+  - name: Schedules
+    description: Vaccination schedule management
+  - name: Bookings
+    description: Queue & appointment booking management
   - name: Auth
     description: Authentication placeholder endpoints
 
@@ -27,6 +32,321 @@ paths:
         '200':
           description: Service is healthy
 
+  # -------------------------------------------------------
+  # Schedules
+  # -------------------------------------------------------
+  /api/v1/schedules:
+    get:
+      tags:
+        - Schedules
+      summary: List available schedules
+      description: Get schedules with remaining quota. Filterable by date and health center.
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            example: '2026-04-20'
+          description: Filter by date (YYYY-MM-DD)
+        - name: health_center_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            example: 1
+          description: Filter by health center ID
+      responses:
+        '200':
+          description: Schedules retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Schedule'
+
+  /api/v1/schedules/{id}:
+    get:
+      tags:
+        - Schedules
+      summary: Get schedule detail
+      description: Get a single schedule with health center, vaccine, and quota info.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Schedule retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Schedule'
+        '404':
+          description: Schedule not found
+
+  /api/v1/schedules/{id}/quota:
+    get:
+      tags:
+        - Schedules
+      summary: Real-time quota report
+      description: Get real-time quota usage for a specific schedule.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Quota report retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/QuotaReport'
+
+  # -------------------------------------------------------
+  # Bookings
+  # -------------------------------------------------------
+  /api/v1/bookings:
+    get:
+      tags:
+        - Bookings
+      summary: List bookings
+      description: >-
+        List bookings filtered by schedule_id + optional status, or by patient_id.
+        One of schedule_id or patient_id is required.
+      parameters:
+        - name: schedule_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: patient_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, confirmed, checked_in, completed, cancelled]
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 15
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Bookings retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+
+    post:
+      tags:
+        - Bookings
+      summary: Create a new booking
+      description: >-
+        Book a vaccination slot. Automatically assigns a queue number.
+        Validates quota availability and prevents duplicate bookings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - schedule_id
+                - patient_id
+              properties:
+                schedule_id:
+                  type: integer
+                  example: 1
+                patient_id:
+                  type: integer
+                  example: 1
+      responses:
+        '201':
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Booking'
+        '422':
+          description: Validation error (duplicate booking, no quota, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/bookings/{id}:
+    get:
+      tags:
+        - Bookings
+      summary: Get booking detail
+      description: Get a single booking with schedule, health center, vaccine, and patient info.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Booking retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Booking'
+        '404':
+          description: Booking not found
+
+  /api/v1/bookings/{id}/check-in:
+    patch:
+      tags:
+        - Bookings
+      summary: Check in a patient
+      description: >-
+        Mark a patient as checked in (attendance). Only bookings with
+        status 'pending' or 'confirmed' can be checked in.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Patient checked in successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Booking'
+        '422':
+          description: Invalid status transition
+
+  /api/v1/bookings/{id}/complete:
+    patch:
+      tags:
+        - Bookings
+      summary: Complete a booking
+      description: >-
+        Mark vaccination as completed. Only bookings with status
+        'checked_in' can be completed.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Booking completed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Booking'
+        '422':
+          description: Invalid status transition
+
+  /api/v1/bookings/{id}/cancel:
+    patch:
+      tags:
+        - Bookings
+      summary: Cancel a booking
+      description: >-
+        Cancel a booking. Cannot cancel bookings that are already
+        'completed' or 'cancelled'.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cancellation_reason:
+                  type: string
+                  maxLength: 500
+                  example: Patient requested cancellation
+      responses:
+        '200':
+          description: Booking cancelled successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Booking'
+        '422':
+          description: Invalid status transition
+
+  # -------------------------------------------------------
+  # Auth (placeholder)
+  # -------------------------------------------------------
   /api/v1/auth/login:
     post:
       tags:
@@ -84,4 +404,166 @@ components:
           example: Request processed.
         data:
           nullable: true
-          description: Placeholder response payload.
+          description: Response payload.
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Validation failed.
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    Schedule:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        health_center_id:
+          type: integer
+          example: 1
+        vaccine_id:
+          type: integer
+          example: 1
+        date:
+          type: string
+          format: date
+          example: '2026-04-20'
+        start_time:
+          type: string
+          example: '08:00:00'
+        end_time:
+          type: string
+          example: '11:00:00'
+        quota:
+          type: integer
+          example: 100
+        booked_count:
+          type: integer
+          example: 45
+          description: Number of active (non-cancelled) bookings
+        health_center:
+          $ref: '#/components/schemas/HealthCenter'
+        vaccine:
+          $ref: '#/components/schemas/Vaccine'
+
+    HealthCenter:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Puskesmas Kecamatan Menteng
+        address:
+          type: string
+          example: Jl. Menteng Raya No. 12
+        phone:
+          type: string
+          example: '021-12345678'
+
+    Vaccine:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Sinovac
+
+    Patient:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nik:
+          type: string
+          example: '3201234567890123'
+        name:
+          type: string
+          example: Budi Santoso
+        birth_date:
+          type: string
+          format: date
+          example: '1990-05-15'
+        gender:
+          type: string
+          enum: [male, female]
+        phone:
+          type: string
+          example: '081234567890'
+        address:
+          type: string
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        schedule_id:
+          type: integer
+          example: 1
+        patient_id:
+          type: integer
+          example: 1
+        queue_number:
+          type: integer
+          example: 42
+        status:
+          type: string
+          enum: [pending, confirmed, checked_in, completed, cancelled]
+          example: pending
+        booked_at:
+          type: string
+          format: date-time
+        checked_in_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        cancelled_at:
+          type: string
+          format: date-time
+          nullable: true
+        cancellation_reason:
+          type: string
+          nullable: true
+        schedule:
+          $ref: '#/components/schemas/Schedule'
+        patient:
+          $ref: '#/components/schemas/Patient'
+
+    QuotaReport:
+      type: object
+      properties:
+        schedule_id:
+          type: integer
+          example: 1
+        total:
+          type: integer
+          example: 100
+          description: Total quota for the schedule
+        used:
+          type: integer
+          example: 45
+          description: Number of active bookings
+        available:
+          type: integer
+          example: 55
+          description: Remaining available slots

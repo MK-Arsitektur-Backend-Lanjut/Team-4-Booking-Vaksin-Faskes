@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\HealthCenterController;
 use App\Http\Controllers\VaccineController;
 use App\Http\Controllers\VaccineScheduleController;
@@ -52,4 +54,18 @@ Route::prefix('vaccine-schedules')->group(function () {
     Route::get('/{id}', [VaccineScheduleController::class, 'show'])->name('vaccine-schedules.show');
     Route::put('/{id}', [VaccineScheduleController::class, 'update'])->name('vaccine-schedules.update');
     Route::delete('/{id}', [VaccineScheduleController::class, 'destroy'])->name('vaccine-schedules.destroy');
+});
+
+// Queue & Appointment (Module 3)
+Route::prefix('v1')->group(function () {
+    Route::get('schedules', [ScheduleController::class, 'index']);
+    Route::get('schedules/{id}', [ScheduleController::class, 'show']);
+    Route::get('schedules/{id}/quota', [ScheduleController::class, 'quota']);
+
+    Route::get('bookings', [BookingController::class, 'index']);
+    Route::post('bookings', [BookingController::class, 'store']);
+    Route::get('bookings/{id}', [BookingController::class, 'show']);
+    Route::patch('bookings/{id}/check-in', [BookingController::class, 'checkIn']);
+    Route::patch('bookings/{id}/complete', [BookingController::class, 'complete']);
+    Route::patch('bookings/{id}/cancel', [BookingController::class, 'cancel']);
 });

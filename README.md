@@ -40,6 +40,31 @@ Base Swagger UI and OpenAPI spec are available at:
 
 You can use this as the starter contract for future API feature testing.
 
+## Load Testing (Queue & Booking)
+
+This project includes a K6-based spike testing suite specifically designed to test the Queue and Booking module's performance under heavy load. The load test simulates high concurrency, checking for race conditions, queue numbering consistency, and database limits.
+
+**How to run the tests via Docker:**
+
+1. **Smoke Test** (Quick check):
+   ```bash
+   docker run --rm -v ${PWD}:/scripts -e BASE_URL=http://host.docker.internal:8000 -e K6_PROFILE=smoke grafana/k6 run /scripts/loadtest/queue/k6-spike.js
+   ```
+
+2. **Spike Test** (Standard spike):
+   ```bash
+   docker run --rm -v ${PWD}:/scripts -e BASE_URL=http://host.docker.internal:8000 -e K6_PROFILE=spike grafana/k6 run /scripts/loadtest/queue/k6-spike.js
+   ```
+
+3. **Burst 10k Test** (Massive 10,000 user concurrency):
+   ```bash
+   docker run --rm -v ${PWD}:/scripts -e BASE_URL=http://host.docker.internal:8000 -e K6_PROFILE=burst10k -e BURST10K_TARGET=10000 -e BURST10K_HOLD=120s grafana/k6 run /scripts/loadtest/queue/k6-spike.js
+   ```
+
+*(Note: If you run into timeouts like `request timeout`, ensure your application is running properly and Docker can access your host via `host.docker.internal`, or change it to your machine's local IP. Also increase `API_RATE_LIMIT_PER_MINUTE` in `.env` to avoid throttle limits).*
+
+For full details and how to export metrics to CSV, see the [Loadtest Queue README](loadtest/queue/README.md).
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.

@@ -68,7 +68,7 @@ class HealthCenterSeeder extends Seeder
                         'longitude' => mt_rand(95000000, 141000000) / 1000000,
                         'phone' => '+62-' . str_pad(mt_rand(0, 9999999999), 10, '0', STR_PAD_LEFT),
                         'capacity' => mt_rand(50, 200),
-                        'status' => rand(0, 1) ? 'active' : 'inactive',
+                        'status' => mt_rand(0, 1) ? 'active' : 'inactive',
                     ]);
                 }
             }

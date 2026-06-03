@@ -15,20 +15,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Default user
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
 
-        // Module 1 Seeders: Health Center Management & Vaccine Scheduling
+        // Module 1 and Module 3 seeders
         $this->call([
             VaccineSeeder::class,
             HealthCenterSeeder::class,
             VaccineStockSeeder::class,
-            // VaccineScheduleSeeder is skipped for performance - has 65+ million statements
-            // You can run it separately: php artisan db:seed --class=VaccineScheduleSeeder
+            // VaccineScheduleSeeder exists but is skipped here due to its heavy runtime.
+            ScheduleSeeder::class,
+            PatientSeeder::class,
+            BookingSeeder::class,
         ]);
     }
 }

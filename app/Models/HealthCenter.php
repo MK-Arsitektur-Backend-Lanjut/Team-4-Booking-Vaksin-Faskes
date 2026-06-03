@@ -40,4 +40,9 @@ class HealthCenter extends Model
     {
         return $this->hasMany(VaccineSchedule::class);
     }
+
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
 }
