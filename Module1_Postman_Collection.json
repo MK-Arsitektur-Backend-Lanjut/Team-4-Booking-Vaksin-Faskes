@@ -1,0 +1,397 @@
+{
+    "info": {
+        "_postman_id": "module-1-vaccine-management",
+        "name": "Module 1 - Vaccine Management API",
+        "description": "API untuk mengelola Health Centers, Vaccines, Vaccine Stocks, dan Vaccine Schedules - Create-Then-Delete Pattern untuk unlimited testing",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Health Centers",
+            "item": [
+                {
+                    "name": "List All Health Centers",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health-centers?per_page=15",
+                            "host": ["{{base_url}}"],
+                            "path": ["health-centers"],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "15"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Health Center By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health-centers/4",
+                            "host": ["{{base_url}}"],
+                            "path": ["health-centers", "4"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Active Health Centers",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health-centers/active",
+                            "host": ["{{base_url}}"],
+                            "path": ["health-centers", "active"]
+                        }
+                    }
+                },
+                {
+                    "name": "Search Health Centers",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health-centers/search?q=jakarta",
+                            "host": ["{{base_url}}"],
+                            "path": ["health-centers", "search"],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "jakarta"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Health Centers By Province",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health-centers/by-province/JAKARTA",
+                            "host": ["{{base_url}}"],
+                            "path": ["health-centers", "by-province", "JAKARTA"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Health Centers By City",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health-centers/by-city/JAKARTA%20PUSAT",
+                            "host": ["{{base_url}}"],
+                            "path": [
+                                "health-centers",
+                                "by-city",
+                                "JAKARTA%20PUSAT"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "[CRUD] 1. Create Test Health Center",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    let responseJson = pm.response.json();",
+                                    "    pm.collectionVariables.set('test_health_center_id', responseJson.data.id);",
+                                    "    console.log('Test Health Center ID: ' + responseJson.data.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Puskesmas Test {{$timestamp}}\",\n  \"code\": \"TST-{{$randomInt}}-{{$timestamp}}\",\n  \"address\": \"Jalan Test No. {{$randomInt}}\",\n  \"province\": \"JAWA BARAT\",\n  \"city\": \"BANDUNG\",\n  \"district\": \"Kecamatan Test\",\n  \"village\": \"Kelurahan Test\",\n  \"latitude\": -6.9175,\n  \"longitude\": 107.6087,\n  \"phone\": \"+62-274123456\",\n  \"capacity\": 100,\n  \"status\": \"active\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/health-centers",
+                            "host": ["{{base_url}}"],
+                            "path": ["health-centers"]
+                        }
+                    }
+                },
+                {
+                    "name": "[CRUD] 2. Get Test Health Center By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health-centers/{{test_health_center_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": [
+                                "health-centers",
+                                "{{test_health_center_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "[CRUD] 3. Update Test Health Center",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"capacity\": 250,\n  \"status\": \"active\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/health-centers/{{test_health_center_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": [
+                                "health-centers",
+                                "{{test_health_center_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "[CRUD] 4. Delete Test Health Center",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health-centers/{{test_health_center_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": [
+                                "health-centers",
+                                "{{test_health_center_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Static Health Center (for testing existing data)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Puskesmas Baru\",\n  \"code\": \"PBR-00001\",\n  \"address\": \"Jalan Kesehatan No. 1\",\n  \"province\": \"JAWA BARAT\",\n  \"city\": \"BANDUNG\",\n  \"district\": \"Kecamatan Bandung\",\n  \"village\": \"Kelurahan Test\",\n  \"latitude\": -6.9175,\n  \"longitude\": 107.6087,\n  \"phone\": \"+62-274123456\",\n  \"capacity\": 100,\n  \"status\": \"active\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/health-centers",
+                            "host": ["{{base_url}}"],
+                            "path": ["health-centers"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Vaccines",
+            "item": [
+                {
+                    "name": "List All Vaccines",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccines",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccines"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Vaccine By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccines/1",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccines", "1"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Active Vaccines",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccines/active",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccines", "active"]
+                        }
+                    }
+                },
+                {
+                    "name": "Search Vaccines",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccines/search?q=pfizer",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccines", "search"],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "pfizer"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Vaccine Stocks",
+            "item": [
+                {
+                    "name": "List All Vaccine Stocks",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccine-stocks?per_page=10",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccine-stocks"],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Available Vaccine Stocks",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccine-stocks/available",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccine-stocks", "available"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Vaccine Stocks By Health Center",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccine-stocks/health-center/4",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccine-stocks", "health-center", "4"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Vaccine Schedules",
+            "item": [
+                {
+                    "name": "List All Schedules",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccine-schedules?per_page=10",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccine-schedules"],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Available Schedules",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccine-schedules/available",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccine-schedules", "available"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Schedules By Date",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccine-schedules/by-date?date=2026-04-23",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccine-schedules", "by-date"],
+                            "query": [
+                                {
+                                    "key": "date",
+                                    "value": "2026-04-23"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Schedules By Health Center",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vaccine-schedules/health-center/4",
+                            "host": ["{{base_url}}"],
+                            "path": ["vaccine-schedules", "health-center", "4"]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000/api",
+            "type": "string"
+        },
+        {
+            "key": "test_health_center_id",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

@@ -21,5 +21,14 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Module 1 Seeders: Health Center Management & Vaccine Scheduling
+        $this->call([
+            VaccineSeeder::class,
+            HealthCenterSeeder::class,
+            VaccineStockSeeder::class,
+            // VaccineScheduleSeeder is skipped for performance - has 65+ million statements
+            // You can run it separately: php artisan db:seed --class=VaccineScheduleSeeder
+        ]);
     }
 }
