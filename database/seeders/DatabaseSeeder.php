@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             VaccineSeeder::class,
             HealthCenterSeeder::class,
             VaccineStockSeeder::class,
-            // VaccineScheduleSeeder is intentionally skipped for performance reasons
+            // VaccineScheduleSeeder exists but is skipped here due its heavy runtime.
             ScheduleSeeder::class,
             PatientSeeder::class,
             BookingSeeder::class,
