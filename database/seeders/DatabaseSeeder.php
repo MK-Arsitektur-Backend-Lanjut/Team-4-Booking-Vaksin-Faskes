@@ -21,13 +21,15 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        // Module 3: Queue & Appointment seeders
+        // Module 1 and Module 3 seeders
         $this->call([
-            HealthCenterSeeder::class,  // 50 health centers
-            VaccineSeeder::class,       // 6 vaccine types
-            ScheduleSeeder::class,      // 200 schedules
-            PatientSeeder::class,       // 2,000 patients
-            BookingSeeder::class,       // 10,000 bookings
+            VaccineSeeder::class,
+            HealthCenterSeeder::class,
+            VaccineStockSeeder::class,
+            // VaccineScheduleSeeder is intentionally skipped for performance reasons
+            ScheduleSeeder::class,
+            PatientSeeder::class,
+            BookingSeeder::class,
         ]);
     }
 }

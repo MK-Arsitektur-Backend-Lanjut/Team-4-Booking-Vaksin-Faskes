@@ -5,8 +5,16 @@ namespace App\Providers;
 use App\Repositories\Base\ModelRepository;
 use App\Repositories\BookingRepositoryInterface;
 use App\Repositories\EloquentBookingRepository;
-use App\Repositories\ScheduleRepositoryInterface;
 use App\Repositories\EloquentScheduleRepository;
+use App\Repositories\Contracts\HealthCenterRepositoryInterface;
+use App\Repositories\Contracts\VaccineRepositoryInterface;
+use App\Repositories\Contracts\VaccineStockRepositoryInterface;
+use App\Repositories\Contracts\VaccineScheduleRepositoryInterface;
+use App\Repositories\HealthCenterRepository;
+use App\Repositories\ScheduleRepositoryInterface;
+use App\Repositories\VaccineRepository;
+use App\Repositories\VaccineStockRepository;
+use App\Repositories\VaccineScheduleRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
 
@@ -33,6 +41,12 @@ class AppServiceProvider extends ServiceProvider
         // Module 3: Queue & Appointment repository bindings
         $this->app->bind(BookingRepositoryInterface::class, EloquentBookingRepository::class);
         $this->app->bind(ScheduleRepositoryInterface::class, EloquentScheduleRepository::class);
+
+        // Repository Bindings for Module 1
+        $this->app->bind(HealthCenterRepositoryInterface::class, HealthCenterRepository::class);
+        $this->app->bind(VaccineRepositoryInterface::class, VaccineRepository::class);
+        $this->app->bind(VaccineStockRepositoryInterface::class, VaccineStockRepository::class);
+        $this->app->bind(VaccineScheduleRepositoryInterface::class, VaccineScheduleRepository::class);
     }
 
     /**

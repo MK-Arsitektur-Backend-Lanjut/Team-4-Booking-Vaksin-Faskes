@@ -12,11 +12,25 @@ class Vaccine extends Model
 
     protected $fillable = [
         'name',
+        'code',
+        'description',
+        'doses_required',
+        'days_between_doses',
+        'manufacturer',
+        'status',
     ];
 
-    /**
-     * Get the schedules using this vaccine.
-     */
+    // Relationships
+    public function vaccineStocks(): HasMany
+    {
+        return $this->hasMany(VaccineStock::class);
+    }
+
+    public function vaccineSchedules(): HasMany
+    {
+        return $this->hasMany(VaccineSchedule::class);
+    }
+
     public function schedules(): HasMany
     {
         return $this->hasMany(Schedule::class);

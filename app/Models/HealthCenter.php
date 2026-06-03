@@ -12,13 +12,35 @@ class HealthCenter extends Model
 
     protected $fillable = [
         'name',
+        'code',
         'address',
+        'province',
+        'city',
+        'district',
+        'village',
+        'latitude',
+        'longitude',
         'phone',
+        'capacity',
+        'status',
     ];
 
-    /**
-     * Get the schedules for this health center.
-     */
+    protected $casts = [
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
+    ];
+
+    // Relationships
+    public function vaccineStocks(): HasMany
+    {
+        return $this->hasMany(VaccineStock::class);
+    }
+
+    public function vaccineSchedules(): HasMany
+    {
+        return $this->hasMany(VaccineSchedule::class);
+    }
+
     public function schedules(): HasMany
     {
         return $this->hasMany(Schedule::class);
