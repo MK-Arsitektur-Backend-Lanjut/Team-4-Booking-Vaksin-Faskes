@@ -6,12 +6,27 @@ use App\Models\Patient;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
+ * @extends Factory<Patient>
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Patient>
  */
 class PatientFactory extends Factory
 {
     protected $model = Patient::class;
 
+    public function definition(): array
+    {
+        $status = $this->faker->randomElement(['pending', 'verified']);
+
+        return [
+            'patient_id' => 'PAT-'.strtoupper((string) \Illuminate\Support\Str::ulid()),
+            'nik' => $this->faker->unique()->numerify('################'),
+            'full_name' => $this->faker->name(),
+            'birth_date' => $this->faker->dateTimeBetween('-70 years', '-1 years')->format('Y-m-d'),
+            'gender' => $this->faker->randomElement(['male', 'female']),
+            'phone_number' => $this->faker->numerify('08##########'),
+            'address' => $this->faker->address(),
+            'identity_verification_status' => $this->faker->randomElement(['pending', 'verified']),
+            'identity_verified_at' => $this->faker->optional()->dateTimeBetween('-2 years', 'now'),
     /**
      * Define the model's default state.
      *
@@ -26,6 +41,11 @@ class PatientFactory extends Factory
             'gender' => fake()->randomElement(['male', 'female']),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
+            'identity_verification_status' => $status,
+            'identity_verified_at' => $status === 'verified'
+                ? $this->faker->dateTimeBetween('-2 years', 'now')
+                : null,
         ];
+    }
     }
 }

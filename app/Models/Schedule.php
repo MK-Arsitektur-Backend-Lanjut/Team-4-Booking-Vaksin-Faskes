@@ -12,6 +12,27 @@ class Schedule extends Model
     use HasFactory;
 
     protected $fillable = [
+        'schedule_id',
+        'faskes_id',
+        'service_type',
+        'vaccine_name',
+        'starts_at',
+        'ends_at',
+        'capacity',
+        'booked_count',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'starts_at' => 'datetime',
+            'ends_at' => 'datetime',
+        ];
+    }
+
+    public function faskes(): BelongsTo
+    {
+        return $this->belongsTo(Faskes::class);
         'health_center_id',
         'vaccine_id',
         'date',

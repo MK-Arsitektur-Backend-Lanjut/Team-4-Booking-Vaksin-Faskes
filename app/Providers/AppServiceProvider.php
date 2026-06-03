@@ -3,6 +3,13 @@
 namespace App\Providers;
 
 use App\Repositories\Base\ModelRepository;
+use App\Repositories\Patient\Contracts\HealthHistoryRepositoryInterface;
+use App\Repositories\Patient\Contracts\PatientRepositoryInterface;
+use App\Repositories\Patient\Contracts\VaccinationHistoryRepositoryInterface;
+use App\Repositories\Patient\Eloquent\HealthHistoryRepository;
+use App\Repositories\Patient\Eloquent\PatientRepository;
+use App\Repositories\Patient\Eloquent\VaccinationHistoryRepository;
+use Illuminate\Cache\RateLimiting\Limit;
 use App\Repositories\BookingRepositoryInterface;
 use App\Repositories\EloquentBookingRepository;
 use App\Repositories\EloquentScheduleRepository;
@@ -16,6 +23,8 @@ use App\Repositories\VaccineRepository;
 use App\Repositories\VaccineStockRepository;
 use App\Repositories\VaccineScheduleRepository;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,6 +34,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(PatientRepositoryInterface::class, PatientRepository::class);
+        $this->app->bind(HealthHistoryRepositoryInterface::class, HealthHistoryRepository::class);
+        $this->app->bind(VaccinationHistoryRepositoryInterface::class, VaccinationHistoryRepository::class);
+
         // Base repository binding (existing)
         $this->app->bind('repository.base', function ($app, array $parameters) {
             $modelClass = $parameters['model'] ?? null;
@@ -54,6 +67,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        RateLimiter::for('api', function (Request $request) {
+            $limitPerMinute = (int) env('API_RATE_LIMIT_PER_MINUTE', 120);
+
+            return Limit::perMinute(max($limitPerMinute, 1))->by($request->ip());
+        });
     }
 }
