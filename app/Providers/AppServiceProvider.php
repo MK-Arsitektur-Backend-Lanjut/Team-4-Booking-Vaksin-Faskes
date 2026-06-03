@@ -10,6 +10,18 @@ use App\Repositories\Patient\Eloquent\HealthHistoryRepository;
 use App\Repositories\Patient\Eloquent\PatientRepository;
 use App\Repositories\Patient\Eloquent\VaccinationHistoryRepository;
 use Illuminate\Cache\RateLimiting\Limit;
+use App\Repositories\BookingRepositoryInterface;
+use App\Repositories\EloquentBookingRepository;
+use App\Repositories\EloquentScheduleRepository;
+use App\Repositories\Contracts\HealthCenterRepositoryInterface;
+use App\Repositories\Contracts\VaccineRepositoryInterface;
+use App\Repositories\Contracts\VaccineStockRepositoryInterface;
+use App\Repositories\Contracts\VaccineScheduleRepositoryInterface;
+use App\Repositories\HealthCenterRepository;
+use App\Repositories\ScheduleRepositoryInterface;
+use App\Repositories\VaccineRepository;
+use App\Repositories\VaccineStockRepository;
+use App\Repositories\VaccineScheduleRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -26,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(HealthHistoryRepositoryInterface::class, HealthHistoryRepository::class);
         $this->app->bind(VaccinationHistoryRepositoryInterface::class, VaccinationHistoryRepository::class);
 
+        // Base repository binding (existing)
         $this->app->bind('repository.base', function ($app, array $parameters) {
             $modelClass = $parameters['model'] ?? null;
 
@@ -37,6 +50,16 @@ class AppServiceProvider extends ServiceProvider
 
             return new ModelRepository(new $modelClass());
         });
+
+        // Module 3: Queue & Appointment repository bindings
+        $this->app->bind(BookingRepositoryInterface::class, EloquentBookingRepository::class);
+        $this->app->bind(ScheduleRepositoryInterface::class, EloquentScheduleRepository::class);
+
+        // Repository Bindings for Module 1
+        $this->app->bind(HealthCenterRepositoryInterface::class, HealthCenterRepository::class);
+        $this->app->bind(VaccineRepositoryInterface::class, VaccineRepository::class);
+        $this->app->bind(VaccineStockRepositoryInterface::class, VaccineStockRepository::class);
+        $this->app->bind(VaccineScheduleRepositoryInterface::class, VaccineScheduleRepository::class);
     }
 
     /**

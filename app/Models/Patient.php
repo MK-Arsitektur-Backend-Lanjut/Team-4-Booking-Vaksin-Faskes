@@ -22,6 +22,19 @@ class Patient extends Model
         'identity_verified_at',
     ];
 
+        'nik',
+        'name',
+        'birth_date',
+        'gender',
+        'phone',
+        'address',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -38,5 +51,14 @@ class Patient extends Model
     public function vaccinationHistories(): HasMany
     {
         return $this->hasMany(VaccinationHistory::class);
+        ];
+    }
+
+    /**
+     * Get the bookings for this patient.
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
     }
 }
