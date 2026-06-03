@@ -126,7 +126,7 @@ class LargeScaleSimulationSeeder extends Seeder
 
     private function seedPatientHistoriesByChunk(int $chunkSize): void
     {
-        if (DB::table('health_histories')->exists() || DB::table('vaccination_histories')->exists()) {
+        if (DB::table('health_histories')->exists() && DB::table('vaccination_histories')->exists()) {
             return;
         }
 
