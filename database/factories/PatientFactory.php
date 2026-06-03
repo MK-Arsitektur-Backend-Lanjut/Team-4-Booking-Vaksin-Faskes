@@ -15,8 +15,10 @@ class PatientFactory extends Factory
 
     public function definition(): array
     {
+        $status = $this->faker->randomElement(['pending', 'verified']);
+
         return [
-            'patient_id' => 'PAT-'.$this->faker->unique()->bothify('########-######'),
+            'patient_id' => 'PAT-'.strtoupper((string) \Illuminate\Support\Str::ulid()),
             'nik' => $this->faker->unique()->numerify('################'),
             'full_name' => $this->faker->name(),
             'birth_date' => $this->faker->dateTimeBetween('-70 years', '-1 years')->format('Y-m-d'),
@@ -39,6 +41,11 @@ class PatientFactory extends Factory
             'gender' => fake()->randomElement(['male', 'female']),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
+            'identity_verification_status' => $status,
+            'identity_verified_at' => $status === 'verified'
+                ? $this->faker->dateTimeBetween('-2 years', 'now')
+                : null,
         ];
+    }
     }
 }

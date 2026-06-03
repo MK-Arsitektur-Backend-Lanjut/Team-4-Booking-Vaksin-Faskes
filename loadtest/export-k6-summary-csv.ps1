@@ -29,6 +29,9 @@ foreach ($metricProperty in $summary.metrics.PSObject.Properties) {
     $metric = $metricProperty.Value
 
     $values = $metric.values
+    if ($null -eq $values) {
+        throw "Invalid k6 summary format for metric '$metricName': property 'values' not found. Ensure the input was created with k6 --summary-export (not the JSON metrics output)."
+    }
     $rows += [PSCustomObject]@{
         metric = $metricName
         type = $metric.type
