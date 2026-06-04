@@ -26,14 +26,18 @@ class PatientRepository extends EloquentBaseRepository implements PatientReposit
 
     public function searchPaginated(?string $keyword, int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->query()->orderByDesc('id');
+        // Select only necessary columns to reduce IO
+        $query = $this->query()
+            ->select(['id', 'patient_id', 'nik', 'full_name', 'phone_number', 'identity_verification_status', 'identity_verified_at'])
+            ->orderByDesc('id');
 
         if (! empty($keyword)) {
             $query->where(function ($builder) use ($keyword) {
+                // Prefer prefix matches for name and patient_id to allow index usage when possible
                 $builder
-                    ->where('patient_id', 'like', "%{$keyword}%")
-                    ->orWhere('nik', 'like', "%{$keyword}%")
-                    ->orWhere('full_name', 'like', "%{$keyword}%");
+                    ->where('patient_id', 'like', "{$keyword}%")
+                    ->orWhere('nik', 'like', "{$keyword}%")
+                    ->orWhere('full_name', 'like', "{$keyword}%");
             });
         }
 

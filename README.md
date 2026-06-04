@@ -33,6 +33,25 @@ Then open `http://localhost:8000` in your browser.
 
 API base URL: `http://localhost:8000/api/v1`
 
+## Environment (local & CI)
+
+- **Do not commit** your `.env` with production secrets. The repository ignores `.env` by default. Use `.env.example` as the canonical template.
+- Local setup: copy the example and generate an app key:
+
+```powershell
+cp .env.example .env; php artisan key:generate
+```
+
+- On Windows PowerShell use:
+
+```powershell
+Copy-Item .env.example .env; php artisan key:generate
+```
+
+- CI / production: set the required env values (including `APP_KEY`) using your CI/platform secret management (do not store secrets in the repo). For example, in CI set `APP_KEY` and database credentials as protected environment variables.
+
+- If you need a shared non-sensitive template for developers, commit only a `.env.example` file containing placeholder values.
+
 ## API Docs (Swagger)
 
 Base Swagger UI and OpenAPI spec are available at:

@@ -10,8 +10,8 @@ info:
   version: 1.0.0
 
 servers:
-  - url: http://localhost:8000
-    description: Local Docker
+  - url: /
+    description: Same origin (use relative paths)
 
 tags:
   - name: System
@@ -41,6 +41,7 @@ paths:
       tags:
         - Patient Registration
       summary: List patients
+      description: Get a paginated list of patients. Searchable by NIK or full name.
       parameters:
         - in: query
           name: search
@@ -49,6 +50,77 @@ paths:
           description: Search by NIK or patient name
         - in: query
           name: per_page
+          required: false
+          schema:
+            type: integer
+            default: 15
+            minimum: 1
+            maximum: 100
+          description: Items per page
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number
+      responses:
+        '200':
+          description: Patients retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Patient'
+    post:
+      tags:
+        - Patient Registration
+      summary: Register a new patient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nik, full_name, birth_date, gender]
+              properties:
+                nik:
+                  type: string
+                  example: '3201010101010001'
+                full_name:
+                  type: string
+                  example: Budi Santoso
+                birth_date:
+                  type: string
+                  format: date
+                  example: '1990-05-15'
+                gender:
+                  type: string
+                  enum: [male, female]
+                phone_number:
+                  type: string
+                  example: '081234567890'
+                address:
+                  type: string
+      responses:
+        '201':
+          description: Patient registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Patient'
   # -------------------------------------------------------
   # Schedules
   # -------------------------------------------------------
@@ -181,8 +253,6 @@ paths:
             maximum: 100
       responses:
         '200':
-          description: Paginated patient list
-
           description: Bookings retrieved successfully
           content:
             application/json:
@@ -369,39 +439,46 @@ paths:
   /api/v1/auth/login:
     post:
       tags:
-        - Patient Registration
-      summary: Register a new patient
+        - Auth
+      summary: Simple development login (returns a dev token)
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - nik
-                - full_name
-                - birth_date
-                - gender
+              required: [email, password]
               properties:
-                nik:
+                email:
                   type: string
-                  example: '3201010101010001'
-                full_name:
+                  format: email
+                  example: test@example.com
+                password:
                   type: string
-                  example: Budi Santoso
-                birth_date:
-                  type: string
-                  format: date
-                gender:
-                  type: string
-                  enum: [male, female]
-                phone_number:
-                  type: string
-                address:
-                  type: string
+                  example: password
       responses:
-        '201':
-          description: Patient registered
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/Patient'
+                          token:
+                            type: string
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/patients/verify-identity:
     post:
@@ -424,8 +501,21 @@ paths:
       responses:
         '200':
           description: Identity verified
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Patient'
         '422':
-          description: Identity mismatch
+          description: Identity mismatch or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/patients/{patientId}/health-histories:
     get:
@@ -443,6 +533,17 @@ paths:
       responses:
         '200':
           description: Health history list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/HealthHistory'
     post:
       tags:
         - Patient Registration
@@ -473,6 +574,15 @@ paths:
       responses:
         '201':
           description: Health history created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/HealthHistory'
 
   /api/v1/patients/{patientId}/health-histories/{historyId}:
     put:
@@ -511,6 +621,10 @@ paths:
       responses:
         '200':
           description: Health history updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
     delete:
       tags:
         - Patient Registration
@@ -533,6 +647,10 @@ paths:
       responses:
         '200':
           description: Health history deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 
   /api/v1/patients/{patientId}/vaccination-histories:
     get:
@@ -550,6 +668,17 @@ paths:
       responses:
         '200':
           description: Vaccination history list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/VaccinationHistory'
     post:
       tags:
         - Patient Registration
@@ -584,6 +713,15 @@ paths:
       responses:
         '201':
           description: Vaccination history created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VaccinationHistory'
 
   /api/v1/patients/{patientId}/vaccination-histories/{historyId}:
     put:
@@ -626,6 +764,10 @@ paths:
       responses:
         '200':
           description: Vaccination history updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
     delete:
       tags:
         - Patient Registration
@@ -648,6 +790,10 @@ paths:
       responses:
         '200':
           description: Vaccination history deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 
   /api/v1/patients/{patientId}:
     get:
@@ -664,7 +810,16 @@ paths:
             example: PAT-20260414-000001
       responses:
         '200':
-          description: Patient detail
+          description: Patient retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Patient'
         '404':
           description: Not found
 
@@ -771,10 +926,14 @@ components:
         id:
           type: integer
           example: 1
+        patient_id:
+          type: string
+          description: External patient identifier (patients.patient_id)
+          example: PAT-20260414-000001
         nik:
           type: string
           example: '3201234567890123'
-        name:
+        full_name:
           type: string
           example: Budi Santoso
         birth_date:
@@ -784,11 +943,74 @@ components:
         gender:
           type: string
           enum: [male, female]
-        phone:
+        phone_number:
           type: string
           example: '081234567890'
         address:
           type: string
+        identity_verification_status:
+          type: string
+          description: Status of identity verification (e.g., verified, pending)
+          example: verified
+
+    HealthHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        health_history_id:
+          type: string
+          example: HLT-20260414-000123
+        patient_id:
+          type: integer
+          example: 1
+        condition_name:
+          type: string
+          example: Diabetes
+        diagnosed_at:
+          type: string
+          format: date
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    VaccinationHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        vaccination_history_id:
+          type: string
+          example: VAC-20260414-000321
+        patient_id:
+          type: integer
+          example: 1
+        vaccine_name:
+          type: string
+          example: Sinovac
+        dose_number:
+          type: integer
+          example: 1
+        vaccinated_at:
+          type: string
+          format: date-time
+        provider_name:
+          type: string
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
 
     Booking:
       type: object

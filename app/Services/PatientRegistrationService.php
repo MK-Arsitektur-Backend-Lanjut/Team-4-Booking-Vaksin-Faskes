@@ -51,7 +51,8 @@ class PatientRegistrationService
     {
         $cacheKey = "patient_identity_verify_{$nik}_{$birthDate}";
 
-        return Cache::remember($cacheKey, now()->addSeconds(30), function () use ($nik, $birthDate) {
+        // Cache verification result briefly to avoid repeated DB lookups (5 minutes)
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($nik, $birthDate) {
             $patient = $this->patientRepository->findByNik($nik);
             $patientBirthDate = $patient?->birth_date ? Carbon::parse($patient->birth_date)->toDateString() : null;
 

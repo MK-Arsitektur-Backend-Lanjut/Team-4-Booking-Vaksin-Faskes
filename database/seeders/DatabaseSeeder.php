@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,10 +16,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(LargeScaleSimulationSeeder::class);
-        // Default user
-        User::factory()->create([
-            'name' => 'Test User',
+        // Default user (create if not exists)
+        User::firstOrCreate([
             'email' => 'test@example.com',
+        ], [
+            'name' => 'Test User',
+            'password' => bcrypt('password'),
         ]);
 
         // Module 1 and Module 3 seeders
@@ -28,7 +31,6 @@ class DatabaseSeeder extends Seeder
             VaccineStockSeeder::class,
             // VaccineScheduleSeeder exists but is skipped here due to its heavy runtime.
             ScheduleSeeder::class,
-            PatientSeeder::class,
             BookingSeeder::class,
         ]);
     }

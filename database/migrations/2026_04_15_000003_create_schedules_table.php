@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('schedules', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('health_center_id')->constrained('health_centers')->cascadeOnDelete();
-            $table->foreignId('vaccine_id')->constrained('vaccines')->cascadeOnDelete();
-            $table->date('date');
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->unsignedInteger('quota');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('schedules')) {
+            Schema::create('schedules', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('health_center_id')->constrained('health_centers')->cascadeOnDelete();
+                $table->foreignId('vaccine_id')->constrained('vaccines')->cascadeOnDelete();
+                $table->date('date');
+                $table->time('start_time');
+                $table->time('end_time');
+                $table->unsignedInteger('quota');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

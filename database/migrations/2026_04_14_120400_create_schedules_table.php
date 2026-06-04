@@ -8,20 +8,22 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('schedules', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('faskes_id')->constrained('faskes')->cascadeOnDelete();
-            $table->string('service_type')->default('vaccination');
-            $table->string('vaccine_name')->nullable();
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
-            $table->unsignedInteger('capacity')->default(0);
-            $table->unsignedInteger('booked_count')->default(0);
-            $table->timestamps();
+        if (!Schema::hasTable('schedules')) {
+            Schema::create('schedules', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('faskes_id')->constrained('faskes')->cascadeOnDelete();
+                $table->string('service_type')->default('vaccination');
+                $table->string('vaccine_name')->nullable();
+                $table->timestamp('starts_at');
+                $table->timestamp('ends_at');
+                $table->unsignedInteger('capacity')->default(0);
+                $table->unsignedInteger('booked_count')->default(0);
+                $table->timestamps();
 
-            $table->index(['faskes_id', 'starts_at']);
-            $table->index('service_type');
-        });
+                $table->index(['faskes_id', 'starts_at']);
+                $table->index('service_type');
+            });
+        }
     }
 
     public function down(): void

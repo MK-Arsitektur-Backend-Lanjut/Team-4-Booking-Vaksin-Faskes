@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\HealthCenter;
+use App\Models\Faskes;
 use App\Models\Schedule;
 use App\Models\Vaccine;
 use Illuminate\Database\Seeder;
@@ -14,13 +14,13 @@ class ScheduleSeeder extends Seeder
      */
     public function run(): void
     {
-        $healthCenterIds = HealthCenter::pluck('id')->toArray();
-        $vaccineIds = Vaccine::pluck('id')->toArray();
+        $faskesIds = Faskes::pluck('id')->toArray();
+        $vaccineNames = Vaccine::pluck('name')->toArray();
 
         for ($i = 0; $i < 20; $i++) {
             Schedule::factory(500)->create([
-                'health_center_id' => fn () => fake()->randomElement($healthCenterIds),
-                'vaccine_id' => fn () => fake()->randomElement($vaccineIds),
+                'faskes_id' => fn () => fake()->randomElement($faskesIds),
+                'vaccine_name' => fn () => fake()->randomElement($vaccineNames),
             ]);
         }
     }

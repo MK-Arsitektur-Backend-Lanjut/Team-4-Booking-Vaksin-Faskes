@@ -27,7 +27,25 @@ class BookingController extends Controller
     {
         // If patient_id is provided, return all bookings for that patient
         if ($request->has('patient_id')) {
-            $patientId = (int) $request->input('patient_id');
+            $patientIdInput = $request->input('patient_id');
+
+            if (!is_numeric($patientIdInput)) {
+                $patient = \App\Models\Patient::where('patient_id', $patientIdInput)
+                    ->orWhere('nik', $patientIdInput)
+                    ->first();
+
+                $patientId = $patient ? $patient->id : null;
+            } else {
+                $patientId = (int) $patientIdInput;
+            }
+
+            if (! $patientId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Patient not found.',
+                ], 404);
+            }
+
             $bookings = $this->bookingRepository->findByPatient($patientId);
 
             return response()->json([
@@ -37,7 +55,15 @@ class BookingController extends Controller
             ]);
         }
 
-        // Otherwise, require schedule_id
+        // Otherwise, require schedule_id. Resolve external codes (SCH-...) to numeric id if necessary.
+        $scheduleInput = $request->input('schedule_id');
+
+        if (!empty($scheduleInput) && !is_numeric($scheduleInput)) {
+            $schedule = \App\Models\Schedule::where('schedule_id', $scheduleInput)->first();
+            $resolvedScheduleId = $schedule ? $schedule->id : null;
+            $request->merge(['schedule_id' => $resolvedScheduleId]);
+        }
+
         $request->validate([
             'schedule_id' => ['required', 'integer', 'exists:schedules,id'],
             'status' => ['nullable', 'string', 'in:pending,confirmed,checked_in,completed,cancelled'],
