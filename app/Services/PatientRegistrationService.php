@@ -63,7 +63,11 @@ class PatientRegistrationService
             }
 
             if ($patient->identity_verification_status !== 'verified') {
-                return $this->patientRepository->markIdentityAsVerified($patient);
+                $verified = $this->patientRepository->markIdentityAsVerified($patient);
+                // Invalidate cache after status change so subsequent requests don't get stale data
+                Cache::forget($cacheKey);
+
+                return $verified;
             }
 
             return $patient;

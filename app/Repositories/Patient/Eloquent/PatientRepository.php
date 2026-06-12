@@ -33,11 +33,18 @@ class PatientRepository extends EloquentBaseRepository implements PatientReposit
 
         if (! empty($keyword)) {
             $query->where(function ($builder) use ($keyword) {
-                // Prefer prefix matches for name and patient_id to allow index usage when possible
-                $builder
-                    ->where('patient_id', 'like', "{$keyword}%")
-                    ->orWhere('nik', 'like', "{$keyword}%")
-                    ->orWhere('full_name', 'like', "{$keyword}%");
+                // Route to a single index based on keyword pattern instead of OR across 3 indexes.
+                // OR clauses force MySQL to merge multiple index scans — much slower on large datasets.
+                if (str_starts_with($keyword, 'PAT-')) {
+                    // Exact match on patient_id — uses UNIQUE index
+                    $builder->where('patient_id', $keyword);
+                } elseif (ctype_digit($keyword)) {
+                    // Numeric input → NIK prefix search — uses UNIQUE(nik) index
+                    $builder->where('nik', 'like', "{$keyword}%");
+                } else {
+                    // Default: name prefix search — uses full_name index
+                    $builder->where('full_name', 'like', "{$keyword}%");
+                }
             });
         }
 

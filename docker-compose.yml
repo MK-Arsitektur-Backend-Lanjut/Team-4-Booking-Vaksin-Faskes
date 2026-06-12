@@ -1,4 +1,4 @@
-﻿services:
+services:
   app:
     build:
       context: .
@@ -10,8 +10,10 @@
       - .env
     volumes:
       - ./:/var/www
+      - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/zz-custom.conf
     depends_on:
       - db
+      - redis
 
   nginx:
     image: nginx:alpine
@@ -29,6 +31,18 @@
     image: mysql:8.0
     container_name: faskes_db
     restart: unless-stopped
+    command: >
+      --innodb-buffer-pool-size=512M
+      --innodb-log-file-size=128M
+      --innodb-flush-log-at-trx-commit=2
+      --innodb-flush-method=O_DIRECT
+      --max-connections=200
+      --thread-cache-size=16
+      --table-open-cache=2000
+      --innodb-read-io-threads=4
+      --innodb-write-io-threads=4
+      --slow-query-log=1
+      --long-query-time=1
     environment:
       MYSQL_DATABASE: faskes_db
       MYSQL_ROOT_PASSWORD: root
@@ -39,5 +53,17 @@
     volumes:
       - db_data:/var/lib/mysql
 
+  redis:
+    image: redis:7-alpine
+    container_name: faskes_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+
 volumes:
   db_data:
+  redis_data:
+

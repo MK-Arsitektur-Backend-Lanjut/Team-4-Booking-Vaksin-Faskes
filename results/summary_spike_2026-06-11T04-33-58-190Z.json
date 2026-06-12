@@ -1,0 +1,536 @@
+{
+  "root_group": {
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": [
+      {
+        "name": "01 - Register Patient",
+        "path": "::01 - Register Patient",
+        "id": "5828d053d443b4323fad1fff6cd600c6",
+        "groups": [],
+        "checks": [
+            {
+              "fails": 2423,
+              "name": "register: status 201 or 422 (dup NIK)",
+              "path": "::01 - Register Patient::register: status 201 or 422 (dup NIK)",
+              "id": "0559983402e6125b7a857360a5072e33",
+              "passes": 18
+            }
+          ]
+      },
+      {
+        "id": "aa63852560a2b89f061319c7b00ad4bf",
+        "groups": [],
+        "checks": [
+            {
+              "path": "::02 - Search Patients::search: status 200",
+              "id": "4be6a8a4003bbd66105ba7b720451c19",
+              "passes": 15,
+              "fails": 2067,
+              "name": "search: status 200"
+            }
+          ],
+        "name": "02 - Search Patients",
+        "path": "::02 - Search Patients"
+      },
+      {
+        "groups": [],
+        "checks": [
+            {
+              "name": "show: status 200",
+              "path": "::03 - Show Patient::show: status 200",
+              "id": "abe0aa5eebe8c33ad31ff0f142a0b15e",
+              "passes": 12,
+              "fails": 6
+            }
+          ],
+        "name": "03 - Show Patient",
+        "path": "::03 - Show Patient",
+        "id": "ec36b5721d835aaa0b24b7f6ebf489e1"
+      },
+      {
+        "path": "::04 - Verify Identity",
+        "id": "e2812968675056e8f7765837e211e179",
+        "groups": [],
+        "checks": [
+            {
+              "name": "verify: status 200 or 422 (not found)",
+              "path": "::04 - Verify Identity::verify: status 200 or 422 (not found)",
+              "id": "69979aac49bc72b514fbd9803ff0bc53",
+              "passes": 11,
+              "fails": 1943
+            }
+          ],
+        "name": "04 - Verify Identity"
+      },
+      {
+        "name": "05 - Health History CRUD",
+        "path": "::05 - Health History CRUD",
+        "id": "2aab351e6b4bebc8fb06e681dc0eae3c",
+        "groups": [],
+        "checks": [
+            {
+              "name": "health-hist list: status 200",
+              "path": "::05 - Health History CRUD::health-hist list: status 200",
+              "id": "eb0f2c1473f92678b3cc4cd5d6800210",
+              "passes": 9,
+              "fails": 9
+            },
+            {
+              "name": "health-hist add: status 201",
+              "path": "::05 - Health History CRUD::health-hist add: status 201",
+              "id": "9189d23ae2d79fb4837500362fbb4101",
+              "passes": 9,
+              "fails": 9
+            },
+            {
+              "id": "e278e1349a6681b70b49364aaede3ffa",
+              "passes": 9,
+              "fails": 0,
+              "name": "health-hist update: status 200",
+              "path": "::05 - Health History CRUD::health-hist update: status 200"
+            },
+            {
+              "name": "health-hist delete: status 200",
+              "path": "::05 - Health History CRUD::health-hist delete: status 200",
+              "id": "e0c385cfff95a28dc83e9f77916e9c6c",
+              "passes": 9,
+              "fails": 0
+            }
+          ]
+      },
+      {
+        "checks": [
+          {
+            "name": "vacc-hist list: status 200",
+            "path": "::06 - Vaccination History CRUD::vacc-hist list: status 200",
+            "id": "c69cb9184aa6fa81af54030322637cb4",
+            "passes": 8,
+            "fails": 10
+          },
+          {
+            "name": "vacc-hist add: status 201",
+            "path": "::06 - Vaccination History CRUD::vacc-hist add: status 201",
+            "id": "f6a809d7bb3bfbb40357eb4ce8e7c463",
+            "passes": 8,
+            "fails": 10
+          },
+          {
+            "name": "vacc-hist update: status 200",
+            "path": "::06 - Vaccination History CRUD::vacc-hist update: status 200",
+            "id": "aa141a84994e4304a11f0135ce5d02f0",
+            "passes": 6,
+            "fails": 2
+          },
+          {
+            "id": "12df436cdb6f63158500af9e1abafb7f",
+            "passes": 6,
+            "fails": 2,
+            "name": "vacc-hist delete: status 200",
+            "path": "::06 - Vaccination History CRUD::vacc-hist delete: status 200"
+          }
+        ],
+        "name": "06 - Vaccination History CRUD",
+        "path": "::06 - Vaccination History CRUD",
+        "id": "c008514ec2de4ebbfcd6f832c7d39c4f",
+        "groups": []
+      }
+    ],
+    "checks": [],
+    "name": ""
+  },
+  "options": {
+    "summaryTrendStats": [
+      "avg",
+      "min",
+      "med",
+      "max",
+      "p(90)",
+      "p(95)"
+    ],
+    "summaryTimeUnit": "",
+    "noColor": false
+  },
+  "state": {
+    "isStdOutTTY": false,
+    "isStdErrTTY": false,
+    "testRunDurationMs": 209795.360703
+  },
+  "metrics": {
+    "verify_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 29997.2701018,
+        "p(95)": 29997.9514123,
+        "avg": 29533.51262416839,
+        "min": 101.346994,
+        "med": 29995.144113,
+        "max": 30028.185885
+      }
+    },
+    "show_patient_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 91.721169,
+        "med": 128.4696775,
+        "max": 377.619325,
+        "p(90)": 288.3749647,
+        "p(95)": 336.9900389999999,
+        "avg": 170.07005094444446
+      }
+    },
+    "search_success_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.007204610951008645,
+        "passes": 15,
+        "fails": 2067
+      },
+      "thresholds": {
+        "rate>0.70": {
+          "ok": false
+        }
+      }
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 138.6371005,
+        "max": 2293.339083,
+        "p(90)": 539.7885246000001,
+        "p(95)": 625.8141552999998,
+        "avg": 247.52058099999985,
+        "min": 77.048094
+      }
+    },
+    "vacc_history_write_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1091.8605278529412,
+        "min": 95.107271,
+        "med": 125.820777,
+        "max": 29999.526156,
+        "p(90)": 583.0176713999999,
+        "p(95)": 639.26421535
+      }
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "rate": 22581.314401449756,
+        "count": 4737455
+      }
+    },
+    "http_req_receiving": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.334152094821078,
+        "min": 0,
+        "med": 0,
+        "max": 31.307352,
+        "p(90)": 0.1374088,
+        "p(95)": 0.7506785999999946
+      }
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.01817906377821542,
+        "passes": 120,
+        "fails": 6481
+      }
+    },
+    "group_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 30008.053781000002,
+        "avg": 28048.461872143078,
+        "min": 92.08459,
+        "med": 30001.884513,
+        "max": 46046.608786,
+        "p(90)": 30005.499321
+      }
+    },
+    "health_history_success_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 9,
+        "fails": 9,
+        "rate": 0.5
+      }
+    },
+    "http_429_total": {
+      "contains": "default",
+      "values": {
+        "count": 651,
+        "rate": 3.103023812435958
+      },
+      "type": "counter"
+    },
+    "rate_limited_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.09862142099681867,
+        "passes": 651,
+        "fails": 5950
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 1,
+        "min": 0,
+        "max": 2000
+      }
+    },
+    "vacc_history_read_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 1065.3371030555556,
+        "min": 96.432349,
+        "med": 136.153899,
+        "max": 16038.512424,
+        "p(90)": 435.2228223000003,
+        "p(95)": 2997.6763423999782
+      }
+    },
+    "health_history_write_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 91.351547,
+        "med": 129.4069615,
+        "max": 609.904474,
+        "p(90)": 453.4332355,
+        "p(95)": 499.29410475,
+        "avg": 183.58845225000002
+      }
+    },
+    "vacc_history_success_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.4444444444444444,
+        "passes": 8,
+        "fails": 10
+      }
+    },
+    "verify_success_rate": {
+      "values": {
+        "rate": 0.005629477993858751,
+        "passes": 11,
+        "fails": 1943
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 1661834,
+        "rate": 7921.214246260673
+      }
+    },
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 27649.654699608393,
+        "min": 77.048094,
+        "med": 29994.984131,
+        "max": 30028.185885,
+        "p(90)": 29998.437661199998,
+        "p(95)": 29999.2336818
+      },
+      "thresholds": {
+        "p(95)<8000": {
+          "ok": false
+        }
+      }
+    },
+    "http_req_sending": {
+      "values": {
+        "p(95)": 1.2302209999999985,
+        "avg": 0.4042173638834366,
+        "min": 0.012601,
+        "med": 0.192309,
+        "max": 48.056633,
+        "p(90)": 0.7732402000000002
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_blocked": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.003001,
+        "med": 3.575395,
+        "max": 202.481048,
+        "p(90)": 10.559852800000003,
+        "p(95)": 17.438767499999997,
+        "avg": 5.814414620413716
+      }
+    },
+    "vus_max": {
+      "contains": "default",
+      "values": {
+        "value": 2000,
+        "min": 1606,
+        "max": 2000
+      },
+      "type": "gauge"
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0,
+        "med": 3.216368,
+        "max": 202.377843,
+        "p(90)": 9.7352908,
+        "p(95)": 16.466066299999994,
+        "avg": 5.403532545070212
+      }
+    },
+    "health_history_read_duration": {
+      "values": {
+        "med": 135.672089,
+        "max": 610.265297,
+        "p(90)": 392.5480494,
+        "p(95)": 444.1836601499997,
+        "avg": 214.6870498888889,
+        "min": 107.58737
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1819,
+        "rate": 8.670353786207384
+      }
+    },
+    "search_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 29300.58618395345,
+        "min": 94.471734,
+        "med": 29994.941787000003,
+        "max": 30023.907093,
+        "p(90)": 29999.1064293,
+        "p(95)": 30000.1558303
+      }
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 87895.22256233083,
+        "min": 3756.035281,
+        "med": 93660.978531,
+        "max": 95713.110834,
+        "p(90)": 94620.679362,
+        "p(95)": 94893.4644906
+      }
+    },
+    "show_patient_success_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "fails": 6,
+        "rate": 0.6666666666666666,
+        "passes": 12
+      }
+    },
+    "register_success_rate": {
+      "values": {
+        "rate": 0.007374027038099139,
+        "passes": 18,
+        "fails": 2423
+      },
+      "thresholds": {
+        "rate>0.70": {
+          "ok": false
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "http_req_waiting": {
+      "values": {
+        "avg": 27648.916330149666,
+        "min": 76.845582,
+        "med": 29994.598066,
+        "max": 30028.027176,
+        "p(90)": 29998.308775399997,
+        "p(95)": 29999.1128342
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "register_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 26356.37020222862,
+        "min": 101.455549,
+        "med": 29995.140286,
+        "max": 30019.231313,
+        "p(90)": 29997.924523,
+        "p(95)": 29999.037033
+      }
+    },
+    "http_req_failed": {
+      "contains": "default",
+      "values": {
+        "passes": 6481,
+        "fails": 142,
+        "rate": 0.9785595651517439
+      },
+      "thresholds": {
+        "rate<0.10": {
+          "ok": false
+        }
+      },
+      "type": "rate"
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 6623,
+        "rate": 31.568858233123425
+      }
+    }
+  }
+}
