@@ -39,7 +39,9 @@ class EloquentScheduleRepository extends EloquentBaseRepository implements Sched
             }]);
 
         if ($date) {
-            $query->whereDate('date', $date);
+            // `date` is a DATE column, so a plain equality match is index-friendly.
+            // whereDate() would compile to DATE(`date`) = ? and bypass the index.
+            $query->where('date', $date);
         }
 
         if ($healthCenterId) {
