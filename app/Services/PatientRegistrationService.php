@@ -44,7 +44,15 @@ class PatientRegistrationService
     {
         $boundedPerPage = min(max($perPage, 1), 100);
 
-        return $this->patientRepository->searchPaginated($keyword, $boundedPerPage);
+        if (empty($keyword)) {
+            return $this->patientRepository->searchPaginated(null, $boundedPerPage);
+        }
+
+        $cacheKey = 'patients_search_' . md5("{$keyword}_{$boundedPerPage}_" . request('page', 1));
+
+        return Cache::remember($cacheKey, now()->addSeconds(30), function () use ($keyword, $boundedPerPage) {
+            return $this->patientRepository->searchPaginated($keyword, $boundedPerPage);
+        });
     }
 
     public function verifyNikAndIdentity(string $nik, string $birthDate): Patient
@@ -52,7 +60,7 @@ class PatientRegistrationService
         $cacheKey = "patient_identity_verify_{$nik}_{$birthDate}";
 
         // Cache verification result briefly to avoid repeated DB lookups (5 minutes)
-        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($nik, $birthDate) {
+        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($nik, $birthDate, $cacheKey) {
             $patient = $this->patientRepository->findByNik($nik);
             $patientBirthDate = $patient?->birth_date ? Carbon::parse($patient->birth_date)->toDateString() : null;
 
@@ -76,41 +84,61 @@ class PatientRegistrationService
 
     public function getHealthHistories(int $patientId): Collection
     {
-        return $this->healthHistoryRepository->getByPatient($patientId);
+        $cacheKey = "patient_health_histories_{$patientId}";
+
+        return Cache::remember($cacheKey, now()->addSeconds(30), function () use ($patientId) {
+            return $this->healthHistoryRepository->getByPatient($patientId);
+        });
     }
 
     public function addHealthHistory(int $patientId, array $payload)
     {
+        Cache::forget("patient_health_histories_{$patientId}");
+
         return $this->healthHistoryRepository->createForPatient($patientId, $payload);
     }
 
     public function updateHealthHistory(int $patientId, string $externalHistoryId, array $payload)
     {
+        Cache::forget("patient_health_histories_{$patientId}");
+
         return $this->healthHistoryRepository->updateForPatient($patientId, $externalHistoryId, $payload);
     }
 
     public function deleteHealthHistory(int $patientId, string $externalHistoryId): bool
     {
+        Cache::forget("patient_health_histories_{$patientId}");
+
         return $this->healthHistoryRepository->deleteForPatient($patientId, $externalHistoryId);
     }
 
     public function getVaccinationHistories(int $patientId): Collection
     {
-        return $this->vaccinationHistoryRepository->getByPatient($patientId);
+        $cacheKey = "patient_vaccination_histories_{$patientId}";
+
+        return Cache::remember($cacheKey, now()->addSeconds(30), function () use ($patientId) {
+            return $this->vaccinationHistoryRepository->getByPatient($patientId);
+        });
     }
 
     public function addVaccinationHistory(int $patientId, array $payload)
     {
+        Cache::forget("patient_vaccination_histories_{$patientId}");
+
         return $this->vaccinationHistoryRepository->createForPatient($patientId, $payload);
     }
 
     public function updateVaccinationHistory(int $patientId, string $externalHistoryId, array $payload)
     {
+        Cache::forget("patient_vaccination_histories_{$patientId}");
+
         return $this->vaccinationHistoryRepository->updateForPatient($patientId, $externalHistoryId, $payload);
     }
 
     public function deleteVaccinationHistory(int $patientId, string $externalHistoryId): bool
     {
+        Cache::forget("patient_vaccination_histories_{$patientId}");
+
         return $this->vaccinationHistoryRepository->deleteForPatient($patientId, $externalHistoryId);
     }
 }

@@ -16,12 +16,18 @@ class PatientRepository extends EloquentBaseRepository implements PatientReposit
 
     public function findByNik(string $nik): ?Patient
     {
-        return $this->query()->where('nik', $nik)->first();
+        return $this->query()
+            ->select(['id', 'patient_id', 'nik', 'full_name', 'birth_date', 'gender', 'identity_verification_status', 'identity_verified_at'])
+            ->where('nik', $nik)
+            ->first();
     }
 
     public function findByExternalIdOrFail(string $externalPatientId): Patient
     {
-        return $this->query()->where('patient_id', $externalPatientId)->firstOrFail();
+        return $this->query()
+            ->select(['id', 'patient_id', 'nik', 'full_name', 'birth_date', 'gender', 'phone_number', 'address', 'identity_verification_status', 'identity_verified_at'])
+            ->where('patient_id', $externalPatientId)
+            ->firstOrFail();
     }
 
     public function searchPaginated(?string $keyword, int $perPage = 15): LengthAwarePaginator
@@ -53,7 +59,7 @@ class PatientRepository extends EloquentBaseRepository implements PatientReposit
 
     public function markIdentityAsVerified(Patient $patient): Patient
     {
-        $patient->forceFill([
+        $patient->fill([
             'identity_verification_status' => 'verified',
             'identity_verified_at' => now(),
         ])->save();

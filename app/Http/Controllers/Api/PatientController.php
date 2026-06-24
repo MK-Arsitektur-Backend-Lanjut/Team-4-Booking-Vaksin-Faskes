@@ -9,8 +9,10 @@ use App\Http\Requests\StoreVaccinationHistoryRequest;
 use App\Http\Requests\UpdateHealthHistoryRequest;
 use App\Http\Requests\UpdateVaccinationHistoryRequest;
 use App\Http\Requests\VerifyIdentityRequest;
+use App\Models\Patient;
 use App\Repositories\Patient\Contracts\PatientRepositoryInterface;
 use App\Services\PatientRegistrationService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -34,7 +36,17 @@ class PatientController extends Controller
 
     public function store(StorePatientRequest $request): JsonResponse
     {
-        $patient = $this->patientService->register($request->validated());
+        try {
+            $patient = $this->patientService->register($request->validated());
+        } catch (QueryException $e) {
+            if (str_contains($e->getMessage(), 'patients_nik_unique') || $e->getCode() === 23000) {
+                return response()->json([
+                    'message' => 'Registrasi gagal.',
+                    'errors' => ['nik' => ['NIK sudah terdaftar.']],
+                ], 422);
+            }
+            throw $e;
+        }
 
         return response()->json([
             'message' => 'Registrasi pasien berhasil.',

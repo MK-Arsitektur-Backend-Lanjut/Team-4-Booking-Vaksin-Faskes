@@ -51,9 +51,18 @@ class StoreBookingRequest extends FormRequest
         // Resolve patient_id (can be numeric id, NIK, or external patient_id like PAT-...)
         if ($this->has('patient_id') && !is_numeric($this->input('patient_id'))) {
             $val = $this->input('patient_id');
-            $patient = \App\Models\Patient::where('patient_id', $val)
-                ->orWhere('nik', $val)
-                ->first();
+
+            // Route by format to use the correct unique index — avoids OR that skips indexes
+            if (str_starts_with($val, 'PAT-')) {
+                $patient = \App\Models\Patient::where('patient_id', $val)->first();
+            } elseif (ctype_digit($val) && strlen($val) === 16) {
+                $patient = \App\Models\Patient::where('nik', $val)->first();
+            } else {
+                // Fallback (e.g., partial NIK or name — unlikely but safe)
+                $patient = \App\Models\Patient::where('patient_id', $val)
+                    ->orWhere('nik', $val)
+                    ->first();
+            }
 
             if ($patient) {
                 $this->merge(['patient_id' => $patient->id]);

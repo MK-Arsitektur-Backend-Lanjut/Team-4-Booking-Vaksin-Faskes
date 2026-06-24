@@ -16,8 +16,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $createIndexIfNotExists = function (string $table, string $indexName, string $columns) {
-            $dbName = DB::getDatabaseName();
+        // SQLite (testing) doesn't need these optimization indexes, skip
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
+        $dbName = DB::getDatabaseName();
+
+        $createIndexIfNotExists = function (string $table, string $indexName, string $columns) use ($dbName) {
             $count = DB::selectOne(
                 "SELECT COUNT(1) as c FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND INDEX_NAME = ?",
                 [$dbName, $table, $indexName]
@@ -101,6 +107,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         $dropIndexIfExists = function (string $table, string $indexName) {
             $dbName = DB::getDatabaseName();
             $count = DB::selectOne(
