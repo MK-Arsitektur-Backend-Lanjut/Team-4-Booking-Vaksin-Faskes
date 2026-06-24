@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CancelBookingRequest;
 use App\Http\Requests\StoreBookingRequest;
 use App\Repositories\BookingRepositoryInterface;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -69,24 +70,32 @@ class BookingController extends Controller
 
         try {
             $booking = DB::transaction(function () use ($scheduleId, $patientId) {
-                // Check for duplicate booking
+                // Fast, friendly rejection of an obvious duplicate before we
+                // reserve a slot. The unique index below is the race-safe backstop.
                 if ($this->bookingRepository->checkDuplicateBooking($scheduleId, $patientId)) {
-                    throw new \Exception('DUPLICATE_BOOKING');
+                    throw new \RuntimeException('DUPLICATE_BOOKING');
                 }
 
-                // Check quota availability
-                // We lock the schedule record to prevent concurrent bookings from exceeding quota
-                DB::table('schedules')->where('id', $scheduleId)->lockForUpdate()->first();
+                // Atomically reserve one quota slot and allocate the next queue
+                // number in a single statement. The WHERE guard makes overselling
+                // impossible; the row write-lock held until commit makes the queue
+                // number race-free without a wide SELECT ... FOR UPDATE.
+                $reserved = DB::table('schedules')
+                    ->where('id', $scheduleId)
+                    ->whereColumn('booked_count', '<', 'quota')
+                    ->update([
+                        'booked_count' => DB::raw('booked_count + 1'),
+                        'last_queue_number' => DB::raw('last_queue_number + 1'),
+                    ]);
 
-                $quota = $this->bookingRepository->getQuotaUsage($scheduleId);
-                if ($quota['available'] <= 0) {
-                    throw new \Exception('NO_QUOTA');
+                if ($reserved === 0) {
+                    throw new \RuntimeException('NO_QUOTA');
                 }
 
-                // Get the next queue number
-                $queueNumber = $this->bookingRepository->getNextQueueNumber($scheduleId);
+                $queueNumber = (int) DB::table('schedules')
+                    ->where('id', $scheduleId)
+                    ->value('last_queue_number');
 
-                // Create the booking
                 return $this->bookingRepository->create([
                     'schedule_id' => $scheduleId,
                     'patient_id' => $patientId,
@@ -94,7 +103,7 @@ class BookingController extends Controller
                     'status' => 'pending',
                     'booked_at' => Carbon::now(),
                 ]);
-            });
+            }, 3); // retry deadlocks / lock-wait timeouts (and SQLite "database is locked")
 
             $booking->load(['schedule.healthCenter', 'schedule.vaccine', 'patient']);
 
@@ -104,25 +113,33 @@ class BookingController extends Controller
                 'data' => $booking,
             ], 201);
 
-        } catch (\Exception $e) {
-            if ($e->getMessage() === 'DUPLICATE_BOOKING') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Booking failed.',
-                    'errors' => ['patient_id' => ['Patient already has an active booking for this schedule.']],
-                ], 422);
-            }
-
-            if ($e->getMessage() === 'NO_QUOTA') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Booking failed.',
-                    'errors' => ['schedule_id' => ['No available quota for this schedule. All slots are fully booked.']],
-                ], 422);
+        } catch (\RuntimeException $e) {
+            return $this->bookingFailure($e->getMessage());
+        } catch (QueryException $e) {
+            // A concurrent request claimed the same (schedule, patient) pair first;
+            // the unique index rejects this insert. Map it to the duplicate response.
+            if ($e->getCode() === '23000') {
+                return $this->bookingFailure('DUPLICATE_BOOKING');
             }
 
             throw $e;
         }
+    }
+
+    /**
+     * Build the 422 response for a booking that could not be placed.
+     */
+    private function bookingFailure(string $reason): JsonResponse
+    {
+        $errors = $reason === 'NO_QUOTA'
+            ? ['schedule_id' => ['No available quota for this schedule. All slots are fully booked.']]
+            : ['patient_id' => ['Patient already has an active booking for this schedule.']];
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Booking failed.',
+            'errors' => $errors,
+        ], 422);
     }
 
     /**
@@ -223,10 +240,26 @@ class BookingController extends Controller
 
         $reason = $request->validated('cancellation_reason');
 
-        $this->bookingRepository->updateStatus($id, 'cancelled', [
-            'cancelled_at' => Carbon::now(),
-            'cancellation_reason' => $reason,
-        ]);
+        DB::transaction(function () use ($id, $booking, $reason) {
+            // Only the request that actually flips the status frees the slot, so
+            // racing cancellations can't decrement booked_count more than once.
+            $flipped = DB::table('bookings')
+                ->where('id', $id)
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->update([
+                    'status' => 'cancelled',
+                    'cancelled_at' => Carbon::now(),
+                    'cancellation_reason' => $reason,
+                    'updated_at' => Carbon::now(),
+                ]);
+
+            if ($flipped === 1) {
+                DB::table('schedules')
+                    ->where('id', $booking->schedule_id)
+                    ->where('booked_count', '>', 0)
+                    ->decrement('booked_count');
+            }
+        });
 
         $updatedBooking = $this->bookingRepository->findOrFail($id);
         $updatedBooking->load(['schedule.healthCenter', 'schedule.vaccine', 'patient']);
