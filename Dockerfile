@@ -20,6 +20,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
+# Capacity tuning: custom PHP-FPM pool (overrides stock pm.max_children=5).
+# Loaded after the image's www.conf/zz-docker.conf so its [www] directives win.
+COPY docker/php/zz-www.conf /usr/local/etc/php-fpm.d/zz-www.conf
+
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
