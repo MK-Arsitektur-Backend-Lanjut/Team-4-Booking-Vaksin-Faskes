@@ -18,6 +18,8 @@ class Schedule extends Model
         'start_time',
         'end_time',
         'quota',
+        'booked_count',
+        'last_queue_number',
     ];
 
     /**
@@ -30,6 +32,8 @@ class Schedule extends Model
         return [
             'date' => 'date',
             'quota' => 'integer',
+            'booked_count' => 'integer',
+            'last_queue_number' => 'integer',
         ];
     }
 
