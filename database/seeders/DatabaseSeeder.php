@@ -21,12 +21,10 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        // Module 1 and Module 3 seeders
+        // Queue & Appointment module seeders.
         $this->call([
             VaccineSeeder::class,
             HealthCenterSeeder::class,
-            VaccineStockSeeder::class,
-            // VaccineScheduleSeeder exists but is skipped here due to its heavy runtime.
             ScheduleSeeder::class,
             PatientSeeder::class,
             BookingSeeder::class,
