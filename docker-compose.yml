@@ -29,6 +29,17 @@ services:
     image: mysql:8.0
     container_name: faskes_db
     restart: unless-stopped
+    # P0 tuning passed as flags (mounted my.cnf is often ignored as
+    # "world-writable" on Docker Desktop for Windows). 1073741824 = 1 GiB.
+    command:
+      - mysqld
+      - --max-connections=500
+      - --innodb-flush-log-at-trx-commit=2
+      - --sync-binlog=0
+      - --innodb-lock-wait-timeout=5
+      - --innodb-buffer-pool-size=1073741824
+      - --thread-cache-size=100
+      - --back-log=512
     environment:
       MYSQL_DATABASE: faskes_db
       MYSQL_ROOT_PASSWORD: root
