@@ -18,14 +18,42 @@
 
 <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
 <script>
+    // Helper to initialize ReDoc (fallback) into the #swagger-ui container
+    function initReDoc() {
+        var container = document.getElementById('swagger-ui');
+        if (!container) return;
+        container.innerHTML = '<redoc spec-url="/docs/openapi.yaml"></redoc>';
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js';
+        document.body.appendChild(s);
+    }
+
     window.onload = function () {
-        SwaggerUIBundle({
-            url: "{{ route('docs.openapi') }}",
-            dom_id: '#swagger-ui',
-            deepLinking: true,
-            docExpansion: 'list',
-            persistAuthorization: true,
-        });
+        // Use a relative path so Swagger UI fetches the spec from the same origin
+        try {
+            if (typeof SwaggerUIBundle !== 'undefined') {
+                SwaggerUIBundle({
+                    url: '/docs/openapi.yaml',
+                    dom_id: '#swagger-ui',
+                    deepLinking: true,
+                    docExpansion: 'list',
+                    persistAuthorization: true,
+                    // Ensure API requests from the UI ask for JSON so Laravel returns JSON errors
+                    requestInterceptor: (req) => {
+                        req.headers = req.headers || {};
+                        req.headers['Accept'] = 'application/json';
+                        return req;
+                    },
+                });
+            } else {
+                // Swagger bundle not available; fallback to ReDoc
+                initReDoc();
+            }
+        } catch (err) {
+            // If initialization fails, fallback to ReDoc
+            console.error('Swagger UI failed to initialize, falling back to ReDoc:', err);
+            initReDoc();
+        }
     };
 </script>
 </body>

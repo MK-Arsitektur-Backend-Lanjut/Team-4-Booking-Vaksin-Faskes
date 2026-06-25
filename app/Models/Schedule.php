@@ -12,6 +12,7 @@ class Schedule extends Model
     use HasFactory;
 
     protected $fillable = [
+        'schedule_id',
         'health_center_id',
         'vaccine_id',
         'date',
@@ -37,25 +38,24 @@ class Schedule extends Model
         ];
     }
 
-    /**
-     * Get the health center that owns this schedule.
-     */
+    // Compatibility: some parts of the codebase expect a healthCenter relation
     public function healthCenter(): BelongsTo
     {
-        return $this->belongsTo(HealthCenter::class);
+        return $this->belongsTo(HealthCenter::class, 'health_center_id');
     }
 
-    /**
-     * Get the vaccine used in this schedule.
-     */
+    // Also expose vaccine relation
     public function vaccine(): BelongsTo
     {
-        return $this->belongsTo(Vaccine::class);
+        return $this->belongsTo(Vaccine::class, 'vaccine_id');
     }
 
-    /**
-     * Get the bookings for this schedule.
-     */
+    // Legacy alias: keep faskes() for older code that may still call it
+    public function faskes(): BelongsTo
+    {
+        return $this->belongsTo(HealthCenter::class, 'health_center_id');
+    }
+
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);

@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\ScheduleController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\HealthCenterController;
 use App\Http\Controllers\VaccineController;
 use App\Http\Controllers\VaccineScheduleController;
@@ -56,8 +58,26 @@ Route::prefix('vaccine-schedules')->group(function () {
     Route::delete('/{id}', [VaccineScheduleController::class, 'destroy'])->name('vaccine-schedules.destroy');
 });
 
-// Queue & Appointment (Module 3)
-Route::prefix('v1')->group(function () {
+// Patients and Queue/Appointment (v1)
+Route::prefix('v1')->middleware('throttle:api')->group(function () {
+    // Patients
+    Route::get('/patients', [PatientController::class, 'index']);
+    Route::post('/patients', [PatientController::class, 'store']);
+    Route::get('/patients/{patientId}', [PatientController::class, 'show']);
+    Route::post('/patients/verify-identity', [PatientController::class, 'verifyIdentity']);
+    Route::get('/patients/{patientId}/health-histories', [PatientController::class, 'healthHistories']);
+    Route::post('/patients/{patientId}/health-histories', [PatientController::class, 'addHealthHistory']);
+    Route::put('/patients/{patientId}/health-histories/{historyId}', [PatientController::class, 'updateHealthHistory']);
+    Route::delete('/patients/{patientId}/health-histories/{historyId}', [PatientController::class, 'deleteHealthHistory']);
+    Route::get('/patients/{patientId}/vaccination-histories', [PatientController::class, 'vaccinationHistories']);
+    Route::post('/patients/{patientId}/vaccination-histories', [PatientController::class, 'addVaccinationHistory']);
+    Route::put('/patients/{patientId}/vaccination-histories/{historyId}', [PatientController::class, 'updateVaccinationHistory']);
+    Route::delete('/patients/{patientId}/vaccination-histories/{historyId}', [PatientController::class, 'deleteVaccinationHistory']);
+
+    // Auth (development/simple)
+    Route::post('/auth/login', [AuthController::class, 'login']);
+
+    // Queue & Appointment
     Route::get('schedules', [ScheduleController::class, 'index']);
     Route::get('schedules/{id}', [ScheduleController::class, 'show']);
     Route::get('schedules/{id}/quota', [ScheduleController::class, 'quota']);

@@ -20,10 +20,9 @@ class EloquentScheduleRepository extends EloquentBaseRepository implements Sched
     public function findByHealthCenter(int $healthCenterId): Collection
     {
         return $this->query()
-            ->where('health_center_id', $healthCenterId)
-            ->with(['healthCenter', 'vaccine'])
-            ->orderBy('date')
-            ->orderBy('start_time')
+            ->where('faskes_id', $healthCenterId)
+            ->with(['faskes'])
+            ->orderBy('starts_at')
             ->get();
     }
 
@@ -33,7 +32,7 @@ class EloquentScheduleRepository extends EloquentBaseRepository implements Sched
     public function findAvailable(?string $date = null, ?int $healthCenterId = null): Collection
     {
         $query = $this->query()
-            ->with(['healthCenter', 'vaccine'])
+            ->with(['faskes'])
             ->withCount(['bookings as booked_count' => function ($q) {
                 $q->whereNotIn('status', ['cancelled']);
             }]);
@@ -45,13 +44,12 @@ class EloquentScheduleRepository extends EloquentBaseRepository implements Sched
         }
 
         if ($healthCenterId) {
-            $query->where('health_center_id', $healthCenterId);
+            $query->where('faskes_id', $healthCenterId);
         }
 
         return $query
-            ->havingRaw('booked_count < quota')
-            ->orderBy('date')
-            ->orderBy('start_time')
+            ->havingRaw('booked_count < capacity')
+            ->orderBy('starts_at')
             ->get();
     }
 
@@ -61,7 +59,7 @@ class EloquentScheduleRepository extends EloquentBaseRepository implements Sched
     public function findWithRelations(int $id): ?Model
     {
         return $this->query()
-            ->with(['healthCenter', 'vaccine'])
+            ->with(['faskes'])
             ->withCount(['bookings as booked_count' => function ($q) {
                 $q->whereNotIn('status', ['cancelled']);
             }])

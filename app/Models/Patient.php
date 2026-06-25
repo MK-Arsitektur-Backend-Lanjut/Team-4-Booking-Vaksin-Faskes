@@ -5,30 +5,44 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Patient extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    public const EXTERNAL_ID = 'patient_id';
 
     protected $fillable = [
+        'patient_id',
         'nik',
-        'name',
+        'full_name',
         'birth_date',
         'gender',
-        'phone',
+        'phone_number',
         'address',
+        'identity_verification_status',
+        'identity_verified_at',
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string,string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'birth_date' => 'date',
+        'identity_verified_at' => 'datetime',
+    ];
+
+    public function healthHistories(): HasMany
     {
-        return [
-            'birth_date' => 'date',
-        ];
+        return $this->hasMany(HealthHistory::class);
+    }
+
+    public function vaccinationHistories(): HasMany
+    {
+        return $this->hasMany(VaccinationHistory::class);
     }
 
     /**

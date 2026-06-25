@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('health_centers', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->text('address')->nullable();
-            $table->string('phone', 20)->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('health_centers')) {
+            Schema::create('health_centers', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->text('address')->nullable();
+                $table->string('phone', 20)->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
