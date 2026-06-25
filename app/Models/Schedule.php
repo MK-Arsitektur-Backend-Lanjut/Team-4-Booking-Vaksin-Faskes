@@ -19,11 +19,24 @@ class Schedule extends Model
         'start_time',
         'end_time',
         'quota',
+        'booked_count',
+        'last_queue_number',
     ];
 
-    protected $casts = [
-        'date' => 'date',
-    ];
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'date' => 'date',
+            'quota' => 'integer',
+            'booked_count' => 'integer',
+            'last_queue_number' => 'integer',
+        ];
+    }
 
     // Compatibility: some parts of the codebase expect a healthCenter relation
     public function healthCenter(): BelongsTo

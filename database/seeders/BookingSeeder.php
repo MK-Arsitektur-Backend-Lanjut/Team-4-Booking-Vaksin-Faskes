@@ -7,6 +7,7 @@ use App\Models\Patient;
 use App\Models\Schedule;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class BookingSeeder extends Seeder
 {
@@ -89,5 +90,22 @@ class BookingSeeder extends Seeder
         if (! empty($bookings)) {
             Booking::insert($bookings);
         }
+
+        // Keep the schedule counters consistent with the seeded bookings so the
+        // booking endpoint's atomic quota/queue-number reservation starts correct.
+        DB::statement(
+            'UPDATE schedules SET booked_count = (
+                SELECT COUNT(*) FROM bookings
+                WHERE bookings.schedule_id = schedules.id AND bookings.status <> ?
+            )',
+            ['cancelled']
+        );
+
+        DB::statement(
+            'UPDATE schedules SET last_queue_number = (
+                SELECT COALESCE(MAX(queue_number), 0) FROM bookings
+                WHERE bookings.schedule_id = schedules.id
+            )'
+        );
     }
 }
